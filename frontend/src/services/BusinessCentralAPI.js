@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BACKEND_URL = "http://localhost:5000";
+// const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "https://veeba-customer-portal-backend.onrender.com"
 const BASE_API_URL = "/api";
 const COMPANY_ID = "2d90f615-1d92-f011-b41a-6045bde7bf1a";
 

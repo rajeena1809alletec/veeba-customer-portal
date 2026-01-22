@@ -14,9 +14,10 @@ app.use(express.json());
 
 
 const allowedOrigins = [
-    'http://localhost:3000',      // ADD: Your React app
-    'http://localhost:5173',      // ADD: Vite default port
+    'http://localhost:3000',      
+    'http://localhost:5173',      
     'http://localhost:4028',
+    'https://veeba-customer-portal-frontend.onrender.com'
 ];
 
 app.use(cors({
