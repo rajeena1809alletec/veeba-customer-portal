@@ -67,6 +67,9 @@ const FinancialDashboard = () => {
   const [showCustomDateModal, setShowCustomDateModal] = useState(false);
   const [customDateRange, setCustomDateRange] = useState({ start: null, end: null });
 
+  const [creditUtilization, setCreditUtilization] = useState('0%');
+
+
   const financialMetrics = [
     {
       title: 'Total Outstanding',
@@ -94,7 +97,7 @@ const FinancialDashboard = () => {
     },
     {
       title: 'Credit Limit Utilization',
-      amount: '62.3%',
+      amount: creditUtilization,
       icon: 'TrendingUp',
       iconColor: 'var(--color-warning)',
       bgColor: 'bg-warning/10',
@@ -258,6 +261,13 @@ const FinancialDashboard = () => {
           const customerData = customerResult.data;
           // console.log('Customer financial data:', customerData);
           setCustomerFinancialData(customerData);
+
+          const balanceLCY = customerData.balanceLCY || 0;
+          const creditLimitLCY = customerData.creditLimitLCY || 0;
+
+          const utilizationPercentage = (balanceLCY / creditLimitLCY) * 100;
+          setCreditUtilization(`${utilizationPercentage.toFixed(1)}%`);
+
         } else {
           console.error('Failed to fetch customer data:', customerResult.error);
         }
@@ -594,7 +604,7 @@ const FinancialDashboard = () => {
                     Credit Limit Alert
                   </h3>
                   <p className="font-body text-sm text-muted-foreground">
-                    You have utilized 62.3% of your credit limit. Consider settling outstanding invoices to free up credit.
+                    You have utilized {creditUtilization} of your credit limit. Consider settling outstanding invoices to free up credit.
                   </p>
                 </div>
               </div>

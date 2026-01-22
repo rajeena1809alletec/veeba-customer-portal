@@ -44,12 +44,12 @@ const MetricCard = ({ title, value, subtitle, icon, iconColor, bgColor, trend, t
         {subtitle && (
           <p className="font-caption text-xs text-muted-foreground">{subtitle}</p>
         )}
-        {trend && (
+        {/* {trend && (
           <div className={`flex items-center gap-1 text-xs font-medium ${trend === 'up' ? 'text-success' : trend === 'down' ? 'text-error' : 'text-muted-foreground'}`}>
             <Icon name={trend === 'up' ? 'TrendingUp' : trend === 'down' ? 'TrendingDown' : 'Minus'} size={14} />
             <span>{trendValue}</span>
           </div>
-        )}
+        )} */}
       </div>
     </button>
   );

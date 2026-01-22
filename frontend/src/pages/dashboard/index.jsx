@@ -33,16 +33,25 @@ const Dashboard = () => {
         let customerName = 'Guest User';
         let companyName = 'N/A';
         let outstandingBalance = '₹0';
+        let creditUtilization = '0%';
+        let creditUtilizationSubtitle = '₹0 of ₹0';
+        let utilizationTrend = '0%';
 
         if (result.success) {
           const customerData = result.data;
-          console.log('Customer data fetched for dashboard:', customerData);
+          // console.log('Customer data fetched for dashboard:', customerData);
 
-          // Use the name from API
           customerName = customerData.contactName || 'Guest User';
           companyName = customerData.name || 'N/A';
           const balanceLCY = customerData.balanceLCY || 0;
+          const creditLimitLCY = customerData.creditLimitLCY || 0;
+
           outstandingBalance = `₹${balanceLCY.toLocaleString('en-IN')}`;
+
+          const utilizationPercentage = (balanceLCY / creditLimitLCY) * 100;
+          creditUtilization = `${utilizationPercentage.toFixed(1)}%`;
+          creditUtilizationSubtitle = `₹${balanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of ₹${creditLimitLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
         } else {
           console.error('Failed to fetch customer data:', result.error);
         }
@@ -50,8 +59,8 @@ const Dashboard = () => {
         setTimeout(() => {
           const mockData = {
             customer: {
-              name: customerName, 
-              companyName: companyName, 
+              name: customerName,
+              companyName: companyName,
               lastLogin: new Date(Date.now() - 7200000)?.toISOString(),
             },
             metrics: [
@@ -59,7 +68,7 @@ const Dashboard = () => {
                 id: 1,
                 title: "Outstanding Balance",
                 value: outstandingBalance,
-                subtitle: "As of 07/01/2026",
+                subtitle: `As of ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`,
                 icon: "DollarSign",
                 iconColor: "var(--color-error)",
                 bgColor: "bg-error/10",
@@ -70,8 +79,8 @@ const Dashboard = () => {
               {
                 id: 2,
                 title: "Credit Limit Utilization",
-                value: "62.3%",
-                subtitle: "₹12,45,680 of ₹20,00,000",
+                value: creditUtilization,
+                subtitle: creditUtilizationSubtitle,
                 icon: "TrendingUp",
                 iconColor: "var(--color-warning)",
                 bgColor: "bg-warning/10",
