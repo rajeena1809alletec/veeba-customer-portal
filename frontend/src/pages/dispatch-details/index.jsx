@@ -3,15 +3,15 @@ import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 import FinancialMetricCard from './components/FinancialMetricCard';
-import TransactionFilters from './components/TransactionFilters';
-import TransactionsTable from './components/TransactionsTable';
+import DispatchFilters from './components/DispatchFilters';
+import DispatchTable from './components/DispatchTable';
 import AgingAnalysisChart from './components/AgingAnalysisChart';
 import PaymentAlerts from './components/PaymentAlerts';
 import StatementGenerator from './components/StatementGenerator';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { useNavigate } from 'react-router-dom';
-import { getCustomerLedgerEntries, getCustomerByCustomerId, getCurrentMonthInvoiceAmount, getOverdueInvoiceAmount } from 'services/BusinessCentralAPI';
+import { getCustomerLedgerEntries, getCustomerByCustomerId, getCurrentMonthInvoiceAmount, getOverdueInvoiceAmount, getDispatchDetails } from 'services/BusinessCentralAPI';
 
 import CustomDateRangeModal from './components/CustomDateRangeModal';
 
@@ -47,7 +47,7 @@ const getTodayDate = () => {
 
 
 
-const FinancialDashboard = () => {
+const DispatchDetails = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionType, setTransactionType] = useState('all');
   const [dateRange, setDateRange] = useState('all');
@@ -70,166 +70,91 @@ const FinancialDashboard = () => {
   const [creditUtilization, setCreditUtilization] = useState('0%');
 
 
-  const financialMetrics = [
-    {
-      title: 'Total Outstanding',
-      amount: customerFinancialData?.balanceLCY
-        ? `₹${customerFinancialData.balanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : '₹0.00',
-      icon: 'Wallet',
-      iconColor: 'var(--color-error)',
-      bgColor: 'bg-error/10',
-      trend: 'down',
-      trendValue: '8.2%',
-      subtitle: 'Across all invoices'
-    },
-    {
-      title: 'Current Month Purchases',
-      amount: currentMonthAmount
-        ? `₹${currentMonthAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : '₹0.00',
-      icon: 'ShoppingCart',
-      iconColor: 'var(--color-primary)',
-      bgColor: 'bg-primary/10',
-      trend: 'up',
-      trendValue: '12.5%',
-      subtitle: 'January 2026'
-    },
-    {
-      title: 'Credit Limit Utilization',
-      amount: creditUtilization,
-      icon: 'TrendingUp',
-      iconColor: 'var(--color-warning)',
-      bgColor: 'bg-warning/10',
-      subtitle: '₹12,45,680 / ₹20,00,000'
-    },
-    {
-      title: 'Overdue Amount',
-      amount: overdueAmount
-        ? `₹${Math.abs(overdueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : '₹0.00',
-      icon: 'AlertCircle',
-      iconColor: 'var(--color-error)',
-      bgColor: 'bg-error/10',
-      trend: 'up',
-      trendValue: '5.3%',
-      subtitle: '3 invoices overdue'
-    }
-  ];
-
-  //status == pending (for invoice: due date > current date)
-  // const mockTransactions = [
+  // const financialMetrics = [
   //   {
-  //     id: 1,
-  //     type: 'invoice',
-  //     date: '2026-01-05',
-  //     reference: 'INV-2026-0145',
-  //     amount: 145680.50,
-  //     status: 'pending',
-  //     dueDate: '2026-01-20'
+  //     title: 'Total Outstanding',
+  //     amount: customerFinancialData?.balanceLCY
+  //       ? `₹${customerFinancialData.balanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  //       : '₹0.00',
+  //     icon: 'Wallet',
+  //     iconColor: 'var(--color-error)',
+  //     bgColor: 'bg-error/10',
+  //     trend: 'down',
+  //     trendValue: '8.2%',
+  //     subtitle: 'Across all invoices'
   //   },
   //   {
-  //     id: 2,
-  //     type: 'payment',
-  //     date: '2026-01-04',
-  //     reference: 'PAY-2026-0089',
-  //     amount: 98450.00,
-  //     status: 'processed',
-  //     paymentMode: 'NEFT'
+  //     title: 'Current Month Purchases',
+  //     amount: currentMonthAmount
+  //       ? `₹${currentMonthAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  //       : '₹0.00',
+  //     icon: 'ShoppingCart',
+  //     iconColor: 'var(--color-primary)',
+  //     bgColor: 'bg-primary/10',
+  //     trend: 'up',
+  //     trendValue: '12.5%',
+  //     subtitle: 'January 2026'
   //   },
   //   {
-  //     id: 3,
-  //     type: 'invoice',
-  //     date: '2026-01-03',
-  //     reference: 'INV-2026-0144',
-  //     amount: 234560.00,
-  //     status: 'overdue',
-  //     dueDate: '2025-12-28'
+  //     title: 'Credit Limit Utilization',
+  //     amount: creditUtilization,
+  //     icon: 'TrendingUp',
+  //     iconColor: 'var(--color-warning)',
+  //     bgColor: 'bg-warning/10',
+  //     subtitle: '₹12,45,680 / ₹20,00,000'
   //   },
   //   {
-  //     id: 4,
-  //     type: 'credit_note',
-  //     date: '2026-01-02',
-  //     reference: 'CN-2026-0023',
-  //     amount: 12450.00,
-  //     status: 'processed',
-  //     reason: 'Product return'
-  //   },
-  //   {
-  //     id: 5,
-  //     type: 'invoice',
-  //     date: '2025-12-30',
-  //     reference: 'INV-2025-0987',
-  //     amount: 187650.00,
-  //     status: 'paid',
-  //     dueDate: '2026-01-15'
-  //   },
-  //   {
-  //     id: 6,
-  //     type: 'payment',
-  //     date: '2025-12-28',
-  //     reference: 'PAY-2025-0456',
-  //     amount: 156780.00,
-  //     status: 'processed',
-  //     paymentMode: 'RTGS'
-  //   },
-  //   {
-  //     id: 7,
-  //     type: 'invoice',
-  //     date: '2025-12-25',
-  //     reference: 'INV-2025-0986',
-  //     amount: 98760.50,
-  //     status: 'pending',
-  //     dueDate: '2026-01-10'
-  //   },
-  //   {
-  //     id: 8,
-  //     type: 'debit_note',
-  //     date: '2025-12-22',
-  //     reference: 'DN-2025-0015',
-  //     amount: 8950.00,
-  //     status: 'processed',
-  //     reason: 'Shortage claim'
+  //     title: 'Overdue Amount',
+  //     amount: overdueAmount
+  //       ? `₹${Math.abs(overdueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  //       : '₹0.00',
+  //     icon: 'AlertCircle',
+  //     iconColor: 'var(--color-error)',
+  //     bgColor: 'bg-error/10',
+  //     trend: 'up',
+  //     trendValue: '5.3%',
+  //     subtitle: '3 invoices overdue'
   //   }
   // ];
 
-  const mockTransactions = [];
-  const agingData = [
-    { period: '0-30 Days', amount: 456780.50 },
-    { period: '31-60 Days', amount: 345670.00 },
-    { period: '61-90 Days', amount: 234560.00 },
-    { period: '90+ Days', amount: 208670.00 }
-  ];
 
-  const paymentAlerts = [
-    {
-      id: 1,
-      type: 'overdue',
-      title: 'Payment Overdue',
-      message: 'Invoice payment is 10 days past due date. Please settle immediately to avoid late fees.',
-      invoiceRef: 'INV-2026-0144',
-      amount: 234560.00,
-      daysInfo: '10 days overdue'
-    },
-    {
-      id: 2,
-      type: 'due_soon',
-      title: 'Payment Due Soon',
-      message: 'Invoice payment is due in 5 days. Please arrange payment to maintain good credit standing.',
-      invoiceRef: 'INV-2026-0145',
-      amount: 145680.50,
-      daysInfo: 'Due in 5 days'
-    },
-    {
-      id: 3,
-      type: 'reminder',
-      title: 'Payment Reminder',
-      message: 'Friendly reminder about upcoming payment due in 15 days.',
-      invoiceRef: 'INV-2025-0987',
-      amount: 187650.00,
-      daysInfo: 'Due in 15 days'
-    }
-  ];
+  const mockTransactions = [];
+  // const agingData = [
+  //   { period: '0-30 Days', amount: 456780.50 },
+  //   { period: '31-60 Days', amount: 345670.00 },
+  //   { period: '61-90 Days', amount: 234560.00 },
+  //   { period: '90+ Days', amount: 208670.00 }
+  // ];
+
+  // const paymentAlerts = [
+  //   {
+  //     id: 1,
+  //     type: 'overdue',
+  //     title: 'Payment Overdue',
+  //     message: 'Invoice payment is 10 days past due date. Please settle immediately to avoid late fees.',
+  //     invoiceRef: 'INV-2026-0144',
+  //     amount: 234560.00,
+  //     daysInfo: '10 days overdue'
+  //   },
+  //   {
+  //     id: 2,
+  //     type: 'due_soon',
+  //     title: 'Payment Due Soon',
+  //     message: 'Invoice payment is due in 5 days. Please arrange payment to maintain good credit standing.',
+  //     invoiceRef: 'INV-2026-0145',
+  //     amount: 145680.50,
+  //     daysInfo: 'Due in 5 days'
+  //   },
+  //   {
+  //     id: 3,
+  //     type: 'reminder',
+  //     title: 'Payment Reminder',
+  //     message: 'Friendly reminder about upcoming payment due in 15 days.',
+  //     invoiceRef: 'INV-2025-0987',
+  //     amount: 187650.00,
+  //     daysInfo: 'Due in 15 days'
+  //   }
+  // ];
 
   useEffect(() => {
     const fetchLedgerEntries = async () => {
@@ -250,127 +175,30 @@ const FinancialDashboard = () => {
         console.log('Fetching customer data for month:', startDate, 'to', endDate);
 
         // Fetch ledger entries from BC API
-        const [customerResult, ledgerResult, currentMonthResult, overdueResult] = await Promise.all([
-          getCustomerByCustomerId(customerId),
-          getCustomerLedgerEntries(customerId, { open: true }),
-          getCurrentMonthInvoiceAmount(customerId, startDate, endDate),
-          getOverdueInvoiceAmount(customerId, today) // NEW API CALL
-        ]);
 
-        if (customerResult.success) {
-          const customerData = customerResult.data;
-          // console.log('Customer financial data:', customerData);
-          setCustomerFinancialData(customerData);
+        const dispatchResult = await getDispatchDetails(customerId);
 
-          const balanceLCY = customerData.balanceLCY || 0;
-          const creditLimitLCY = customerData.creditLimitLCY || 0;
+        if (dispatchResult.success) {
+          const mapped = dispatchResult.data.map((entry) => ({
+            id: entry.no,
+            invoiceNo: entry.no,
+            invoiceDate: entry.postingDate,
+            dispatchDate: entry.postingDate,
+            lrNo: entry.lrRRNo || '',
+            transporterName: entry.transporterVendorNo || '',
+            driverContact: entry.driverMobNo || '',           // not in API yet
+          }));
 
-          // const utilizationPercentage = (balanceLCY / creditLimitLCY) * 100;
-          const utilizationPercentage = creditLimitLCY > 0 ? (balanceLCY / creditLimitLCY) * 100 : 0;
-          setCreditUtilization(`${utilizationPercentage.toFixed(1)}%`);
-
+          setAllTransactions(mapped);
+          setFilteredTransactions(mapped);
         } else {
-          console.error('Failed to fetch customer data:', customerResult.error);
+          console.error('Failed to fetch dispatch details:', dispatchResult.error);
+          setAllTransactions([]);
+          setFilteredTransactions([]);
         }
 
-        if (currentMonthResult.success) {
-          const monthData = currentMonthResult.data;
-          // console.log('Current month invoice data:', monthData);
-          setCurrentMonthAmount(monthData.amount || 0);
-        } else {
-          console.error('Failed to fetch current month amount:', currentMonthResult.error);
-          setCurrentMonthAmount(0);
-        }
 
-        if (overdueResult.success) {
-          const overdueData = overdueResult.data;
-          // console.log('Overdue invoice data:', overdueData);
-          setOverdueAmount(overdueData.amount || 0);
-        } else {
-          console.error('Failed to fetch overdue amount:', overdueResult.error);
-          setOverdueAmount(0);
-        }
 
-        if (ledgerResult.success) {
-          const ledgerEntries = ledgerResult.data;
-          // console.log('ledger entriesss: ', ledgerResult.data)
-          const mappedTransactions = ledgerEntries.map((entry, index) => {
-
-            let type = 'invoice';
-            if (entry.documentType === 'Payment') {
-              type = 'payment';
-            } else if (entry.documentType === 'Credit Memo') {
-              type = 'credit_note';
-            } else if (entry.documentType === 'Finance Charge Memo') {
-              type = 'debit_note';
-            } else if (entry.documentType === 'Invoice') {
-              type = 'invoice';
-            } else if (entry.documentType === 'Order') {
-              type = 'order';
-            }
-
-            let status = 'processed';
-            let calculatedDueDate = null;
-
-            if (type === 'invoice') {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-
-              if (entry.dueDate) {
-                calculatedDueDate = entry.dueDate;
-                const dueDate = new Date(entry.dueDate);
-                dueDate.setHours(0, 0, 0, 0);
-
-                if (dueDate > today) {
-                  status = 'pending';
-                } else if (dueDate < today) {
-                  status = 'overdue';
-                } else if (dueDate.getTime() === today.getTime()) {
-                  status = 'pending';
-                } else if (dueDate.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000) {
-                  status = 'pending';
-                } else {
-                  status = 'pending';
-                }
-              }
-              else {
-                const dueDate = new Date(entry.postingDate);
-                dueDate.setDate(dueDate.getDate() + 30);
-                calculatedDueDate = dueDate.toISOString().split('T')[0];
-
-                if (dueDate < today) {
-                  status = 'overdue';
-                } else if (dueDate.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000) {
-                  status = 'pending';
-                } else {
-                  status = 'pending';
-                }
-              }
-            }
-
-            return {
-              id: entry.ledgerEntryNo,
-              type: entry.documentType,
-              date: entry.postingDate,
-              reference: entry.documentNo,
-              externalReference: entry.externalDocumentNo || '',
-              amount: Math.abs(entry.amountLCY),
-              status: status,
-              dueDate: entry.dueDate,
-              paymentMode: type === 'payment' ? 'Bank Transfer' : null,
-              originalAmount: entry.originalAmtLCY,
-              remainingAmt: entry.remainingAmount,
-              remainingAmtLCY: entry.remainingAmtLCY
-            };
-          });
-
-          setAllTransactions(mappedTransactions);
-          setFilteredTransactions(mappedTransactions);
-        } else {
-          console.error('Failed to fetch ledger entries:', ledgerResult.error);
-          setAllTransactions(mockTransactions);
-          setFilteredTransactions(mockTransactions);
-        }
       } catch (error) {
         console.error('Error in fetchLedgerEntries:', error);
         // Use mock data as fallback
@@ -389,26 +217,12 @@ const FinancialDashboard = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(t =>
-        t?.reference?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.amount?.toString()?.includes(searchTerm) ||
-        t?.externalReference?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+        t?.invoiceNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.lrNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.transporterName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
       );
     }
 
-    if (transactionType !== 'all') {
-      filtered = filtered.filter(t => {
-        const typeMap = {
-          'Invoice': 'invoice',
-          'Payment': 'payment',
-          'Credit Memo': 'credit_note',
-          'Finance Charge Memo': 'debit_note',
-          'Order': 'order'
-        };
-
-        const mappedType = typeMap[t?.type] || t?.type?.toLowerCase();
-        return mappedType === transactionType;
-      });
-    }
 
     if (dateRange !== 'all') {
       const today = new Date();
@@ -477,13 +291,13 @@ const FinancialDashboard = () => {
       }
 
       filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.date);
+        const transactionDate = new Date(t.invoiceDate);
         return transactionDate >= startDate && transactionDate <= endDate;
       });
 
     }
     setFilteredTransactions(filtered);
-  }, [searchTerm, transactionType, dateRange, allTransactions, customDateRange]);
+  }, [searchTerm, dateRange, allTransactions, customDateRange]);
 
   const handleDateRangeChange = (value) => {
     if (value === 'custom') {
@@ -563,7 +377,7 @@ const FinancialDashboard = () => {
     return (
       <>
         <Helmet>
-          <title>Financial Dashboard - Veeba Foods Customer Portal</title>
+          <title>Dispatch Details - Veeba Foods Customer Portal</title>
         </Helmet>
         <div className="min-h-screen bg-background">
           <Header />
@@ -584,7 +398,7 @@ const FinancialDashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Financial Dashboard - Veeba Foods Customer Portal</title>
+        <title>Dispatch Details - Veeba Foods Customer Portal</title>
         <meta name="description" content="View your financial information, outstanding balances, payment history, and account statements with real-time ERP integration" />
       </Helmet>
       <div className="min-h-screen bg-background">
@@ -597,33 +411,16 @@ const FinancialDashboard = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
               <div>
                 <h1 className="font-heading font-semibold text-2xl md:text-3xl lg:text-4xl text-foreground mb-2">
-                  Financial Dashboard
+                  Dispatch Details
                 </h1>
                 <p className="font-body text-sm md:text-base text-muted-foreground">
-                  Comprehensive view of your financial transactions and account status
+                  Comprehensive view of your disptach details
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  iconName="RefreshCw"
-                  iconPosition="left"
-                  onClick={() => window.location?.reload()}
-                >
-                  Sync ERP
-                </Button>
-                <Button
-                  variant="default"
-                  iconName="CreditCard"
-                  iconPosition="left"
-                  onClick={() => setShowPaymentModal(true)}
-                >
-                  Make Payment
-                </Button>
-              </div>
+
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
               {financialMetrics?.map((metric, index) => (
                 <FinancialMetricCard key={index} {...metric} />
               ))}
@@ -641,44 +438,41 @@ const FinancialDashboard = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-8">
-              <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 gap-6 md:gap-8 mb-6 md:mb-8">
+              <div className="space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground">
-                      Recent Transactions
+                      All Dispatch Details
                     </h2>
-                    <Button
+                    {/* <Button
                       variant="outline"
                       iconName="Download"
                       iconPosition="left"
                       onClick={handleDownloadAllEntries}
                     >
                       Download All Entries
-                    </Button>
+                    </Button> */}
                   </div>
-                  <TransactionFilters
+                  <DispatchFilters
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}
-                    transactionType={transactionType}
-                    onTypeChange={setTransactionType}
                     dateRange={dateRange}
-                    onDateRangeChange={handleDateRangeChange}  // ✅ CHANGE THIS
+                    onDateRangeChange={handleDateRangeChange}
                     onReset={handleResetFilters}
                   />
-                  <TransactionsTable
+                  <DispatchTable
                     transactions={filteredTransactions}
-                    onDownloadPDF={handleDownloadPDF}
                     onViewDetails={handleViewDetails}
                   />
                 </div>
 
-                <AgingAnalysisChart data={agingData} />
+                {/* <AgingAnalysisChart data={agingData} /> */}
               </div>
 
-              <div className="space-y-6">
+              {/* <div className="space-y-6">
                 <div>
                   <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground mb-4">
                     Payment Alerts
@@ -691,10 +485,10 @@ const FinancialDashboard = () => {
                 </div>
 
                 <StatementGenerator onGenerate={handleGenerateStatement} />
-              </div>
+              </div> */}
             </div>
 
-            <div className="bg-card rounded-xl p-6 md:p-8 border border-border shadow-warm-sm">
+            {/* <div className="bg-card rounded-xl p-6 md:p-8 border border-border shadow-warm-sm">
               <div className="flex items-start gap-4 mb-6">
                 <div className="bg-primary/10 rounded-lg p-3">
                   <Icon name="Info" size={24} color="var(--color-primary)" />
@@ -746,11 +540,11 @@ const FinancialDashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </main>
       </div>
-      {showPaymentModal && (
+      {/* {showPaymentModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-card rounded-xl max-w-md w-full p-6 shadow-warm-xl animate-slide-in">
             <div className="flex items-center justify-between mb-6">
@@ -811,7 +605,7 @@ const FinancialDashboard = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {showCustomDateModal && (
         <CustomDateRangeModal
@@ -824,4 +618,4 @@ const FinancialDashboard = () => {
   );
 };
 
-export default FinancialDashboard;
+export default DispatchDetails;

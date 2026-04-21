@@ -3,7 +3,7 @@ import axios from "axios";
 // const BACKEND_URL = "http://localhost:5000";
 const BACKEND_URL = "https://veeba-customer-portal-backend.onrender.com"
 const BASE_API_URL = "/api";
-const COMPANY_ID = "2d90f615-1d92-f011-b41a-6045bde7bf1a";
+const COMPANY_ID = "47a86198-daf0-ee11-a1fd-6045bd722f50";
 
 export const createCustomer = async (customerData) => {
     console.log("customer data: ", customerData);
@@ -95,36 +95,6 @@ export const loginCustomer = async (email, password) => {
 };
 
 
-// export const getCustomerByCustomerId = async (customerId) => {
-//     console.log("Fetching customer data for customerId:", customerId);
-
-//     try {
-//         const response = await axios.get(
-//             `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customer?$filter=no eq '${customerId}'`,
-//             {
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },
-//             }
-//         );
-
-//         console.log("Customer data response(BusinessCentralAPI.js):", response);
-
-//         // Check if any records returned
-//         if (response.data && response.data.value && response.data.value.length > 0) {
-//             return { success: true, data: response.data.value[0] };
-//         } else {
-//             return { success: false, error: 'Customer not found' };
-//         }
-//     } catch (error) {
-//         console.error('Error fetching customer(BusinessCentralAPI.js):', error);
-//         return {
-//             success: false,
-//             error: error.response?.data?.details || 'Failed to fetch customer data',
-//         };
-//     }
-// };
-
 export const getCustomerByCustomerId = async (customerNo, filters = {}) => {
     try {
         let filterQuery = `no eq '${customerNo}'`;
@@ -190,6 +160,7 @@ export const getCustomerLedgerEntries = async (customerNo, filters = {}) => {
         if (filters.top) {
             queryParams += `&$top=${filters.top}`;
         }
+        // console.log("getCustomerLedgerEntries API: ", `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerLedgerEntries?${queryParams}`);
 
         const response = await axios.get(
             `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerLedgerEntries?${queryParams}`,
@@ -280,6 +251,165 @@ export const getOverdueInvoiceAmount = async (customerNo, dueDate) => {
         return {
             success: false,
             error: error.response?.data?.error?.message || error.response?.data?.details || 'Failed to fetch overdue invoice amount',
+        };
+    }
+};
+
+export const getInvoicedValueAmount = async (customerNo, dateFrom, dateTo) => {
+    try {
+        let filterQuery = `customer_No_Filter_FilterOnly eq '${customerNo}' and posting_Date_Filter_FilterOnly ge ${dateFrom} and posting_Date_Filter_FilterOnly le ${dateTo}`;
+        let queryParams = `$filter=${filterQuery}`;
+
+        // console.log('Invoiced Value Amount API URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/CustInvoicedValueAmts?${queryParams}`);
+
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/CustInvoicedValueAmts?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log("Cust Invoiced Value Amount response(BusinessCentralAPI.js):", response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value[0] };
+        } else {
+            return { success: false, error: 'No invoiced value amount data found' };
+        }
+    } catch (error) {
+        console.error('Error fetching cust invoiced value amount(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.response?.data?.details || 'Failed to fetch cust invoiced value amount',
+        };
+    }
+};
+
+export const getPaymentValueAmount = async (customerNo, dateFrom, dateTo) => {
+    try {
+        let filterQuery = `customer_No_Filter_FilterOnly eq '${customerNo}' and posting_Date_Filter_FilterOnly ge ${dateFrom} and posting_Date_Filter_FilterOnly le ${dateTo}`;
+        let queryParams = `$filter=${filterQuery}`;
+
+        // console.log('Payment Value Amount API URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/CustPaymentValueAmts?${queryParams}`);
+
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/CustPaymentValueAmts?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log("Cust Payment Value Amount response(BusinessCentralAPI.js):", response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value[0] };
+        } else {
+            return { success: false, error: 'No payment value amount data found' };
+        }
+    } catch (error) {
+        console.error('Error fetching cust payment value amount(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.response?.data?.details || 'Failed to fetch cust payment value amount',
+        };
+    }
+};
+
+
+export const getDispatchDetails = async (customerNo) => {
+    try {
+        let filterQuery = `sellToCustomerNo eq '${customerNo}'`;
+
+        let queryParams = `$filter=${filterQuery}`;
+        console.log('Dispatch Details URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/dispatchdetails?${queryParams}`);
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/dispatchdetails?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+        console.log("Dispatch Details response(BusinessCentralAPI.js):", response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value };
+        } else {
+            return { success: true, data: [] };
+        }
+    } catch (error) {
+        console.error('Error fetching dispatch details(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error: error.response?.data?.details || 'Failed to fetch dispatch details',
+        };
+    }
+};
+
+export const getOpenOrderValue = async (customerNo) => {
+    try {
+        let filterQuery = `sell_to_Customer_No_Filter_FilterOnly eq '${customerNo}'`;
+        let queryParams = `$filter=${filterQuery}`;
+
+        console.log('Open Order Value API URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/OpenOrderValues?${queryParams}`);
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/OpenOrderValues?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log("Open Order Value response(BusinessCentralAPI.js):", response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value[0] };
+        } else {
+            return { success: false, error: 'No open order value data found' };
+        }
+    } catch (error) {
+        console.error('Error fetching open order value(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.response?.data?.details || 'Failed to fetch open order value',
+        };
+    }
+};
+
+export const getBlockedOrderValue = async (customerNo) => {
+    try {
+        let filterQuery = `no_Filter_FilterOnly eq '${customerNo}'`;
+        let queryParams = `$filter=${filterQuery}`;
+        console.log('Blocked Order Value API URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/BlockOrderValues?${queryParams}`);
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/BlockOrderValues?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log("Blocked Order Value response(BusinessCentralAPI.js):", response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value[0] };
+        } else {
+            return { success: false, error: 'No blocked order value data found' };
+        }
+    } catch (error) {
+        console.error('Error fetching blocked order value(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.response?.data?.details || 'Failed to fetch blocked order value',
         };
     }
 };

@@ -52,7 +52,7 @@ app.all("/api/*path", async (req, res) => {
         const token = await getToken();
 
         const fullPath = req.originalUrl.replace('/api/', '');
-        console.log(fullPath);
+        // console.log(fullPath);
 
         const bcUrl = `${process.env.BC_BASE_URL}/v2.0/${process.env.BC_TENANT_ID}/${process.env.BC_ENVIRONMENT}/api/${fullPath}`;
 

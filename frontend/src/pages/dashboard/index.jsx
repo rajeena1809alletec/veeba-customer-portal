@@ -8,7 +8,32 @@ import WelcomeBanner from './components/WelcomeBanner';
 import MetricCard from './components/MetricCard';
 import RecentActivitiesFeed from './components/RecentActivitiesFeed';
 import UrgentNotificationsPanel from './components/UrgentNotificationsPanel';
-import { getCustomerByCustomerId } from 'services/BusinessCentralAPI';
+import { getCustomerByCustomerId, getInvoicedValueAmount, getPaymentValueAmount, getOpenOrderValue, getBlockedOrderValue } from 'services/BusinessCentralAPI';
+
+
+const getCurrentMonthRange = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return { startDate: fmt(firstDay), endDate: fmt(lastDay) };
+};
+
+const getCurrentFYRange = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed, April = 3
+  const fyStartYear = month >= 3 ? year : year - 1;
+  const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return {
+    // startDate: '2025-04-01',
+    // endDate: '2026-03-31',
+    startDate: fmt(new Date(fyStartYear, 3, 1)),       // 1st April
+    endDate: fmt(new Date(fyStartYear + 1, 2, 31))     // 31st March
+  };
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -16,7 +41,7 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => { // CHANGED TO async
+    const fetchDashboardData = async () => {
       try {
         // Get customerId from localStorage
         const customerId = localStorage.getItem('customerId');
@@ -39,7 +64,7 @@ const Dashboard = () => {
 
         if (result.success) {
           const customerData = result.data;
-          // console.log('Customer data fetched for dashboard:', customerData);
+          console.log('Customer data fetched for dashboard:', customerData);
 
           customerName = customerData.contactName || 'Guest User';
           companyName = customerData.name || 'N/A';
@@ -48,12 +73,77 @@ const Dashboard = () => {
 
           outstandingBalance = `₹${balanceLCY.toLocaleString('en-IN')}`;
 
-          const utilizationPercentage = (balanceLCY / creditLimitLCY) * 100;
+          // const utilizationPercentage = (balanceLCY / creditLimitLCY) * 100;
+          const utilizationPercentage = creditLimitLCY > 0 ? (balanceLCY / creditLimitLCY) * 100 : 0;
           creditUtilization = `${utilizationPercentage.toFixed(1)}%`;
           creditUtilizationSubtitle = `₹${balanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of ₹${creditLimitLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         } else {
           console.error('Failed to fetch customer data:', result.error);
+        }
+
+
+        let invoiceAmountCM = '₹0';
+        let invoiceAmountFY = '₹0';
+        let paymentAmountCM = '₹0';
+        let paymentAmountFY = '₹0';
+        let openOrderValue = '₹0';
+        let blockedOrderValue = '₹0';
+
+        // Fetch Invoiced Value - Current Month
+        const { startDate: cmStart, endDate: cmEnd } = getCurrentMonthRange();
+        const invoicedCMResult = await getInvoicedValueAmount(customerId, cmStart, cmEnd);
+        if (invoicedCMResult.success) {
+          const amt = invoicedCMResult.data.amount || 0;
+          invoiceAmountCM = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          // setInvoicedValueCM(`₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        } else {
+          console.error('Failed to fetch invoiced value CM:', invoicedCMResult.error);
+        }
+
+        // Fetch Invoiced Value - Current Financial Year
+        const { startDate: fyStart, endDate: fyEnd } = getCurrentFYRange();
+        const invoicedFYResult = await getInvoicedValueAmount(customerId, fyStart, fyEnd);
+        if (invoicedFYResult.success) {
+          const amt = invoicedFYResult.data.amount || 0;
+          invoiceAmountFY = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          // setInvoicedValueFY(`₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        } else {
+          console.error('Failed to fetch invoiced value FY:', invoicedFYResult.error);
+        }
+
+
+        const paymentCMResult = await getPaymentValueAmount(customerId, cmStart, cmEnd);
+        if (paymentCMResult.success) {
+          const amt = paymentCMResult.data.amount || 0;
+          paymentAmountCM = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          // setPaymentValueCM(`₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        } else {
+          console.error('Failed to fetch payment value CM:', paymentCMResult.error);
+        }
+
+        const paymentFYResult = await getPaymentValueAmount(customerId, fyStart, fyEnd);
+        if (paymentFYResult.success) {
+          const amt = paymentFYResult.data.amount || 0;
+          paymentAmountFY = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          // setPaymentValueFY(`₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        } else {
+          console.error('Failed to fetch payment value FY:', paymentFYResult.error);
+        }
+        const openOrderResult = await getOpenOrderValue(customerId);
+        if (openOrderResult.success) {
+          const amt = openOrderResult.data.amount || 0;
+          openOrderValue = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+          console.error('Failed to fetch open order value:', openOrderResult.error);
+        }
+
+        const blockedOrderResult = await getBlockedOrderValue(customerId);
+        if (blockedOrderResult.success) {
+          const amt = blockedOrderResult.data.amount || 0;
+          blockedOrderValue = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+          console.error('Failed to fetch blocked order value:', blockedOrderResult.error);
         }
 
         setTimeout(() => {
@@ -90,9 +180,9 @@ const Dashboard = () => {
               },
               {
                 id: 3,
-                title: "Pending Orders",
-                value: "8",
-                subtitle: "Total value: ₹3,45,200",
+                title: "Invoiced Value(CM - FY)",
+                value: invoiceAmountCM,
+                subtitle: `FY Total: ${invoiceAmountFY}`,
                 icon: "ShoppingCart",
                 iconColor: "var(--color-primary)",
                 bgColor: "bg-primary/10",
@@ -102,15 +192,39 @@ const Dashboard = () => {
               },
               {
                 id: 4,
-                title: "Recent Invoices",
-                value: "₹8,92,450",
-                subtitle: "Last 30 days",
+                title: "Payment Received(CM - FY)",
+                value: paymentAmountCM,
+                subtitle: `FY Total: ${paymentAmountFY}`,
                 icon: "FileText",
                 iconColor: "var(--color-accent)",
                 bgColor: "bg-accent/10",
                 trend: "up",
                 trendValue: "12% increase",
                 navigateTo: "/invoice-management",
+              },
+              {
+                id: 5,
+                title: "Open Order Value",
+                value: openOrderValue,
+                subtitle: "",
+                icon: "FileText",
+                iconColor: "var(--color-accent)",
+                bgColor: "bg-accent/10",
+                trend: "up",
+                trendValue: "12% increase",
+                navigateTo: "/dashboard",
+              },
+              {
+                id: 6,
+                title: "Blocked Order Value",
+                value: blockedOrderValue,
+                subtitle: "",
+                icon: "FileText",
+                iconColor: "var(--color-accent)",
+                bgColor: "bg-accent/10",
+                trend: "up",
+                trendValue: "12% increase",
+                navigateTo: "/dashboard",
               },
             ],
             recentActivities: [

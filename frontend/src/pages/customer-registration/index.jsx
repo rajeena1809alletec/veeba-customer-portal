@@ -307,7 +307,7 @@ const CustomerRegistration = () => {
       console.log('Credentials created successfully:', credentialsResult.data);
 
       // Both APIs successful
-      alert('Registration submitted successfully! You will receive an email notification within 2-3 business days regarding your account approval status.');
+      alert('Registration submitted successfully!');
       navigate('/login');
 
 

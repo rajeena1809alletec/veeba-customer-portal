@@ -12,6 +12,7 @@ const Header = () => {
     { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard' },
     { label: 'Orders', path: '/order-management', icon: 'ShoppingCart' },
     { label: 'Invoices', path: '/invoice-management', icon: 'FileText' },
+    { label: 'Dispatch', path: '/dispatch-details', icon: 'MessageSquare' },
     { label: 'Finances', path: '/financial-dashboard', icon: 'DollarSign' },
     { label: 'Profile', path: '/customer-profile', icon: 'User' },
     { label: 'Support', path: '/complaint-management', icon: 'MessageSquare' },
