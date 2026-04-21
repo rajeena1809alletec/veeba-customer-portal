@@ -354,7 +354,7 @@ export const getDispatchDetails = async (customerNo) => {
 
 export const getOpenOrderValue = async (customerNo) => {
     try {
-        let filterQuery = `sell_to_Customer_No_Filter_FilterOnly eq '${customerNo}'`;
+        let filterQuery = `no_Filter_FilterOnly eq '${customerNo}'`;
         let queryParams = `$filter=${filterQuery}`;
 
         console.log('Open Order Value API URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/OpenOrderValues?${queryParams}`);
