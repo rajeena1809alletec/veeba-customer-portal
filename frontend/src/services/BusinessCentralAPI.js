@@ -1,11 +1,11 @@
 import axios from "axios";
 
-// const BACKEND_URL = "http://localhost:5000";
-const BACKEND_URL = "https://veeba-customer-portal-backend.onrender.com"
+const BACKEND_URL = "http://localhost:5000";
+// const BACKEND_URL = "https://veeba-customer-portal-backend.onrender.com"
 const BASE_API_URL = "/api";
 
-const COMPANY_ID = '2d90f615-1d92-f011-b41a-6045bde7bf1a';    //Alletec
-// const COMPANY_ID = "47a86198-daf0-ee11-a1fd-6045bd722f50";   //VEEBA
+// const COMPANY_ID = '2d90f615-1d92-f011-b41a-6045bde7bf1a';    //Alletec
+const COMPANY_ID = "47a86198-daf0-ee11-a1fd-6045bd722f50";   //VEEBA
 
 export const createCustomer = async (customerData) => {
     console.log("customer data: ", customerData);
