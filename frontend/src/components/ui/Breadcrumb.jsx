@@ -5,17 +5,49 @@ import Icon from '../AppIcon';
 const Breadcrumb = () => {
   const location = useLocation();
   const pathnames = location?.pathname?.split('/')?.filter((x) => x);
+  const role = localStorage.getItem('role');
+  const homePath = role === 'Salesperson' ? '/sp-dashboard' : '/dashboard';
 
+  // const breadcrumbNameMap = {
+  //   'dashboard': 'Dashboard',
+  //   'order-management': 'Orders',
+  //   'order-details': 'Order Details',
+  //   'invoice-management': 'Invoices',
+  //   'financial-dashboard': 'Finances',
+  //   'customer-profile': 'Profile',
+  //   'complaint-management': 'Support',
+  //   'notifications-center': 'Notifications',
+  //   'customer-registration': 'Registration',
+  // };
   const breadcrumbNameMap = {
     'dashboard': 'Dashboard',
+    'sp-dashboard': 'Dashboard',
+
     'order-management': 'Orders',
+    'sp-order-management': 'Orders',
+
     'order-details': 'Order Details',
+
     'invoice-management': 'Invoices',
+    'sp-invoice-management': 'Invoices',
+
     'financial-dashboard': 'Finances',
+    'sp-financial-dashboard': 'Finances',
+
     'customer-profile': 'Profile',
+    'sp-customer-profile': 'Profile',
+
     'complaint-management': 'Support',
+    'sp-complaint-management': 'Support',
+
+
     'notifications-center': 'Notifications',
+    'sp-notifications-center': 'Notifications',
+
     'customer-registration': 'Registration',
+
+    'dispatch-details': 'Dispatch',
+    'sp-dispatch-details': 'Dispatch',
   };
 
   if (pathnames?.length === 0 || location?.pathname === '/login') {
@@ -25,7 +57,7 @@ const Breadcrumb = () => {
   return (
     <nav className="flex items-center gap-2 py-4 text-sm font-caption overflow-x-auto scrollbar-custom" aria-label="Breadcrumb">
       <Link
-        to="/dashboard"
+        to={homePath}
         className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-smooth"
       >
         <Icon name="Home" size={16} />

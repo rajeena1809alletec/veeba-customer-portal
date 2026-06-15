@@ -15,6 +15,17 @@ import FinancialDashboard from './pages/financial-dashboard';
 import OrderDetails from './pages/order-details';
 import DispatchDetails from "pages/dispatch-details";
 
+// ── Salesperson Pages ────────────────────────────────────────
+import SPDashboard from './pages-salesperson/dashboard';
+import SPCustomerProfile from './pages-salesperson/customer-profile';
+import SPNotificationsCenter from './pages-salesperson/notifications-center';
+import SPOrderManagement from './pages-salesperson/order-management';
+import SPInvoiceManagement from './pages-salesperson/invoice-management';
+import SPComplaintManagement from './pages-salesperson/complaint-management';
+import SPFinancialDashboard from './pages-salesperson/financial-dashboard';
+import SPOrderDetails from './pages-salesperson/order-details';
+import SPDispatchDetails from './pages-salesperson/dispatch-details';
+
 const Routes = () => {
   return (
     <BrowserRouter>
@@ -34,6 +45,17 @@ const Routes = () => {
           <Route path="/financial-dashboard" element={<FinancialDashboard />} />
           <Route path="/order-details" element={<OrderDetails />} />
           <Route path="/dispatch-details" element={<DispatchDetails />} />
+
+          {/* ── Salesperson Routes ───────────────────────── */}
+          <Route path="/sp-dashboard" element={<SPDashboard />} />
+          <Route path="/sp-customer-profile" element={<SPCustomerProfile />} />
+          <Route path="/sp-notifications-center" element={<SPNotificationsCenter />} />
+          <Route path="/sp-order-management" element={<SPOrderManagement />} />
+          <Route path="/sp-invoice-management" element={<SPInvoiceManagement />} />
+          <Route path="/sp-complaint-management" element={<SPComplaintManagement />} />
+          <Route path="/sp-financial-dashboard" element={<SPFinancialDashboard />} />
+          <Route path="/sp-order-details" element={<SPOrderDetails />} />
+          <Route path="/sp-dispatch-details" element={<SPDispatchDetails />} />
 
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>

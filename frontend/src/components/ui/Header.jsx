@@ -7,28 +7,52 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const role = localStorage.getItem('role');
 
-  const navigationItems = [
+  const customerNavItems = [
     { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard' },
     { label: 'Orders', path: '/order-management', icon: 'ShoppingCart' },
     { label: 'Invoices', path: '/invoice-management', icon: 'FileText' },
-    { label: 'Dispatch', path: '/dispatch-details', icon: 'MessageSquare' },
+    { label: 'Dispatch', path: '/dispatch-details', icon: 'Truck' },
     { label: 'Finances', path: '/financial-dashboard', icon: 'DollarSign' },
     { label: 'Profile', path: '/customer-profile', icon: 'User' },
     { label: 'Support', path: '/complaint-management', icon: 'MessageSquare' },
   ];
 
+  const salespersonNavItems = [
+    { label: 'Dashboard', path: '/sp-dashboard', icon: 'LayoutDashboard' },
+    { label: 'Orders', path: '/sp-order-management', icon: 'ShoppingCart' },
+    { label: 'Invoices', path: '/sp-invoice-management', icon: 'FileText' },
+    { label: 'Dispatch', path: '/sp-dispatch-details', icon: 'Truck' },
+    { label: 'Finances', path: '/sp-financial-dashboard', icon: 'DollarSign' },
+    { label: 'Profile', path: '/sp-customer-profile', icon: 'User' },
+    { label: 'Support', path: '/sp-complaint-management', icon: 'MessageSquare' },
+  ];
+  const navigationItems = role === 'Salesperson' ? salespersonNavItems : customerNavItems;
+
   const handleLogout = () => {
     // Clear localStorage
-    localStorage.removeItem('customerId');
-    localStorage.removeItem('username');
-    localStorage.removeItem('email');
+    const role = localStorage.getItem('role');
+
+    if (role === 'Customer') {
+      localStorage.removeItem('customerId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('email');
+    } else if (role === 'Salesperson') {
+      localStorage.removeItem('salespersonCode');
+      localStorage.removeItem('salespersonName');
+      // localStorage.removeItem('credentials');
+      localStorage.removeItem('level');
+      localStorage.removeItem('customersForSalesperson');
+      localStorage.removeItem('salespersonEmail');
+      localStorage.removeItem('salespersonPhone');
+      localStorage.removeItem('ASOSalespersons');
+    }
+    localStorage.removeItem('role');
     localStorage.removeItem('isLoggedIn');
 
-    // Show confirmation
     alert('You have been logged out successfully');
 
-    // Redirect to login
     navigate('/login');
   };
 
@@ -45,7 +69,7 @@ const Header = () => {
       <header className="fixed top-0 left-0 right-0 bg-card shadow-warm-md z-[100] transition-smooth">
         <div className="flex items-center justify-between h-16 px-4 lg:px-8">
           <div className="flex items-center gap-8">
-            <Link to="/dashboard" className="flex items-center gap-3 transition-smooth hover:opacity-80">
+            <Link to={role === 'Salesperson' ? '/sp-dashboard' : '/dashboard'} className="flex items-center gap-3 transition-smooth hover:opacity-80">
               <div className="w-10 h-10 bg-primary/10 rounded-md flex items-center justify-center transition-smooth">
                 <Icon name="Utensils" size={24} color="var(--color-primary)" />
               </div>
@@ -75,10 +99,7 @@ const Header = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link
-              to="/notifications-center"
-              className="relative p-2 rounded-md hover:bg-muted transition-smooth"
-            >
+            <Link to={role === 'Salesperson' ? '/sp-notifications-center' : '/notifications-center'} className="relative p-2 rounded-md hover:bg-muted transition-smooth" >
               <Icon name="Bell" size={20} color="var(--color-muted-foreground)" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full animate-pulse-subtle"></span>
             </Link>

@@ -1,0 +1,520 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
+import Header from '../../components/ui/Header';
+import Breadcrumb from '../../components/ui/Breadcrumb';
+import QuickActionsPanel from '../../components/ui/QuickActionsPanel';
+import WelcomeBanner from './components/WelcomeBanner';
+import MetricCard from './components/MetricCard';
+import RecentActivitiesFeed from './components/RecentActivitiesFeed';
+import UrgentNotificationsPanel from './components/UrgentNotificationsPanel';
+import { getCustomersByNoList, getSPInvoicedValueAmount, getSPPaymentValueAmount, getSPOpenOrderValue, getSPBlockedOrderValue } from 'services/BusinessCentralAPI';
+
+
+const getCurrentMonthRange = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return { startDate: fmt(firstDay), endDate: fmt(lastDay) };
+};
+
+const getCurrentFYRange = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed, April = 3
+  const fyStartYear = month >= 3 ? year : year - 1;
+  const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return {
+    // startDate: '2025-04-01',
+    // endDate: '2026-03-31',
+    startDate: fmt(new Date(fyStartYear, 3, 1)),       // 1st April
+    endDate: fmt(new Date(fyStartYear + 1, 2, 31))     // 31st March
+  };
+};
+
+const SPDashboard = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const salespersonCode = localStorage.getItem('salespersonCode');
+        const salespersonName = localStorage.getItem('salespersonName');
+        const level = localStorage.getItem('level');
+        const customersForSalesperson = localStorage.getItem('customersForSalesperson');
+        const ASOSalespersons = localStorage.getItem('ASOSalespersons');
+        const effectiveSalespersonCodes = ASOSalespersons?.trim() ? ASOSalespersons : salespersonCode;
+
+
+        if (!salespersonCode) {
+          console.error('Salesperson code not found');
+          navigate('/login');
+          return;
+        }
+
+        if (!ASOSalespersons || ASOSalespersons.trim() === '') {
+          console.error('No ASO salespersons mapped for this salesperson');
+          setTimeout(() => {
+            setDashboardData({
+              salesperson: {
+                name: salespersonName || 'Salesperson',
+                companyName: `Level: ${level || 'N/A'}`,
+                lastLogin: new Date().toISOString(),
+              },
+              metrics: [],
+              recentActivities: [],
+              urgentNotifications: [
+                {
+                  id: 1,
+                  title: 'No ASO Salespersons Assigned',
+                  message: 'No ASO salespersons are mapped to the currently logged-in salesperson. Please contact your administrator.',
+                  priority: 'high',
+                  actionLabel: 'Go to Login',
+                  actionPath: '/login',
+                  clearStorageOnAction: true
+                }
+              ],
+            });
+            setLoading(false);
+          }, 300);
+          return;
+        }
+
+        if (!customersForSalesperson || customersForSalesperson.trim() === '') {
+          console.error('No customers available for this salesperson');
+          setTimeout(() => {
+            setDashboardData({
+              salesperson: {
+                name: salespersonName || 'Salesperson',
+                companyName: `Level: ${level || 'N/A'}`,
+                lastLogin: new Date().toISOString(),
+              },
+              metrics: [],
+              recentActivities: [],
+              urgentNotifications: [
+                {
+                  id: 1,
+                  title: 'No Customers Assigned',
+                  message: 'No customers are available for this salesperson. Please contact your administrator.',
+                  priority: 'high',
+                  actionLabel: 'Go to Login',
+                  actionPath: '/login',
+                  clearStorageOnAction: true
+                }
+              ],
+            });
+            setLoading(false);
+          }, 300);
+          return;
+        }
+
+        const result = await getCustomersByNoList(customersForSalesperson);
+
+        let totalBalanceLCY = 0;
+        let totalCreditLimitLCY = 0;
+
+        if (result.success && result.data.length > 0) {
+          result.data.forEach(customer => {
+            totalBalanceLCY += customer.balanceLCY || 0;
+            totalCreditLimitLCY += customer.creditLimitLCY || 0;
+          });
+          console.log('Aggregated customer data for SP dashboard:', result.data);
+        } else {
+          console.error('Failed to fetch customers from customer list:', result.error);
+        }
+
+        const outstandingBalance = `₹${totalBalanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const utilizationPercentage = totalCreditLimitLCY > 0 ? (totalBalanceLCY / totalCreditLimitLCY) * 100 : 0;
+        const creditUtilization = `${utilizationPercentage.toFixed(1)}%`;
+        const creditUtilizationSubtitle = `₹${totalBalanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of ₹${totalCreditLimitLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+
+
+        let invoiceAmountCM = '₹0';
+        let invoiceAmountFY = '₹0';
+        let paymentAmountCM = '₹0';
+        let paymentAmountFY = '₹0';
+        let openOrderValue = '₹0';
+        let blockedOrderValue = '₹0';
+
+        const { startDate: cmStart, endDate: cmEnd } = getCurrentMonthRange();
+        const { startDate: fyStart, endDate: fyEnd } = getCurrentFYRange();
+        const [
+          invoicedCMResult,
+          invoicedFYResult,
+          paymentCMResult,
+          paymentFYResult,
+          openOrderResult,
+          blockedOrderResult
+        ] = await Promise.all([
+          getSPInvoicedValueAmount(effectiveSalespersonCodes, cmStart, cmEnd),
+          getSPInvoicedValueAmount(effectiveSalespersonCodes, fyStart, fyEnd),
+          getSPPaymentValueAmount(effectiveSalespersonCodes, cmStart, cmEnd),
+          getSPPaymentValueAmount(effectiveSalespersonCodes, fyStart, fyEnd),
+          getSPOpenOrderValue(effectiveSalespersonCodes),
+          getSPBlockedOrderValue(effectiveSalespersonCodes),
+        ]);
+
+        // Fetch Invoiced Value - Current Month
+        if (invoicedCMResult.success) {
+          const amt = invoicedCMResult.data.amount || 0;
+          invoiceAmountCM = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+          console.error('Failed to fetch invoiced value CM:', invoicedCMResult.error);
+        }
+
+        // Fetch Invoiced Value - Current Financial Year
+
+        if (invoicedFYResult.success) {
+          const amt = invoicedFYResult.data.amount || 0;
+          invoiceAmountFY = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+          console.error('Failed to fetch invoiced value FY:', invoicedFYResult.error);
+        }
+
+
+        if (paymentCMResult.success) {
+          const amt = paymentCMResult.data.amount || 0;
+          paymentAmountCM = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+          console.error('Failed to fetch payment value CM:', paymentCMResult.error);
+        }
+
+        if (paymentFYResult.success) {
+          const amt = paymentFYResult.data.amount || 0;
+          paymentAmountFY = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+          console.error('Failed to fetch payment value FY:', paymentFYResult.error);
+        }
+        if (openOrderResult.success) {
+          const amt = openOrderResult.data.amount || 0;
+          openOrderValue = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+          console.error('Failed to fetch open order value:', openOrderResult.error);
+        }
+
+        if (blockedOrderResult.success) {
+          const amt = blockedOrderResult.data.amount || 0;
+          blockedOrderValue = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else {
+          console.error('Failed to fetch blocked order value:', blockedOrderResult.error);
+        }
+
+        setTimeout(() => {
+          const showData = {
+            salesperson: {
+              name: salespersonName || 'Salesperson',
+              companyName: `Level: ${level || 'N/A'}`,
+              lastLogin: new Date(Date.now() - 7200000)?.toISOString(),
+            },
+            metrics: [
+              {
+                id: 1,
+                title: "Outstanding Balance",
+                value: outstandingBalance,
+                subtitle: `As of ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+                icon: "DollarSign",
+                iconColor: "var(--color-error)",
+                bgColor: "bg-error/10",
+                trend: "up",
+                trendValue: "8.5% from last month",
+                navigateTo: "/sp-financial-dashboard",
+              },
+              {
+                id: 2,
+                title: "Credit Limit Utilization",
+                value: creditUtilization,
+                subtitle: creditUtilizationSubtitle,
+                icon: "TrendingUp",
+                iconColor: "var(--color-warning)",
+                bgColor: "bg-warning/10",
+                trend: "up",
+                trendValue: "5.2% increase",
+                navigateTo: "/sp-financial-dashboard",
+              },
+              {
+                id: 3,
+                title: "Invoiced Value(CM - FY)",
+                value: invoiceAmountCM,
+                subtitle: `FY Total: ${invoiceAmountFY}`,
+                icon: "ShoppingCart",
+                iconColor: "var(--color-primary)",
+                bgColor: "bg-primary/10",
+                trend: "down",
+                trendValue: "2 less than yesterday",
+                navigateTo: "/sp-order-management",
+              },
+              {
+                id: 4,
+                title: "Payment Received(CM - FY)",
+                value: paymentAmountCM,
+                subtitle: `FY Total: ${paymentAmountFY}`,
+                icon: "FileText",
+                iconColor: "var(--color-accent)",
+                bgColor: "bg-accent/10",
+                trend: "up",
+                trendValue: "12% increase",
+                navigateTo: "/sp-invoice-management",
+              },
+              {
+                id: 5,
+                title: "Open Order Value",
+                value: openOrderValue,
+                subtitle: "",
+                icon: "FileText",
+                iconColor: "var(--color-accent)",
+                bgColor: "bg-accent/10",
+                trend: "up",
+                trendValue: "12% increase",
+                navigateTo: "/sp-dashboard",
+              },
+              {
+                id: 6,
+                title: "Blocked Order Value",
+                value: blockedOrderValue,
+                subtitle: "",
+                icon: "FileText",
+                iconColor: "var(--color-accent)",
+                bgColor: "bg-accent/10",
+                trend: "up",
+                trendValue: "12% increase",
+                navigateTo: "/sp-dashboard",
+              },
+            ],
+            recentActivities: [
+              {
+                id: 1,
+                type: "order",
+                title: "Order #ORD-2026-00847 Confirmed",
+                description: "Your order for Veeba Mayonnaise (50 cases) has been confirmed and is being processed",
+                status: "processing",
+                timestamp: new Date(Date.now() - 1800000)?.toISOString(),
+                details: {
+                  orderNumber: "ORD-2026-00847",
+                  totalAmount: "₹1,24,500",
+                  items: "3 products",
+                  expectedDelivery: "10/01/2026",
+                },
+              },
+              {
+                id: 2,
+                type: "dispatch",
+                title: "Order #ORD-2026-00832 Dispatched",
+                description: "Your order has been dispatched via Blue Dart. Expected delivery by 08/01/2026",
+                status: "dispatched",
+                timestamp: new Date(Date.now() - 3600000)?.toISOString(),
+                details: {
+                  orderNumber: "ORD-2026-00832",
+                  trackingNumber: "BD123456789IN",
+                  carrier: "Blue Dart",
+                  dispatchDate: "07/01/2026",
+                },
+              },
+              {
+                id: 3,
+                type: "payment",
+                title: "Payment Received - ₹5,67,890",
+                description: "Payment for Invoice #INV-2025-12-1234 has been successfully processed",
+                status: "completed",
+                timestamp: new Date(Date.now() - 7200000)?.toISOString(),
+                details: {
+                  invoiceNumber: "INV-2025-12-1234",
+                  amount: "₹5,67,890",
+                  paymentMode: "NEFT",
+                  transactionId: "NEFT2026010712345",
+                },
+              },
+              {
+                id: 4,
+                type: "invoice",
+                title: "New Invoice Generated - INV-2026-01-0089",
+                description: "Invoice for Order #ORD-2026-00821 is now available for download",
+                status: "pending",
+                timestamp: new Date(Date.now() - 10800000)?.toISOString(),
+                details: {
+                  invoiceNumber: "INV-2026-01-0089",
+                  orderNumber: "ORD-2026-00821",
+                  amount: "₹2,34,560",
+                  dueDate: "21/01/2026",
+                },
+              },
+              {
+                id: 5,
+                type: "notification",
+                title: "New Scheme Announcement",
+                description: "Special discount scheme on Veeba Sauces range - Valid till 31/01/2026",
+                status: "completed",
+                timestamp: new Date(Date.now() - 14400000)?.toISOString(),
+                details: {
+                  schemeCode: "SCH-JAN-2026",
+                  discount: "15% off",
+                  validTill: "31/01/2026",
+                  applicableProducts: "All Veeba Sauces",
+                },
+              },
+              {
+                id: 6,
+                type: "complaint",
+                title: "Complaint #CMP-2026-00234 Resolved",
+                description: "Your complaint regarding product shortage has been resolved with credit note issued",
+                status: "completed",
+                timestamp: new Date(Date.now() - 18000000)?.toISOString(),
+                details: {
+                  complaintNumber: "CMP-2026-00234",
+                  resolution: "Credit Note Issued",
+                  creditNoteNumber: "CN-2026-00156",
+                  amount: "₹12,450",
+                },
+              },
+              {
+                id: 7,
+                type: "order",
+                title: "Order #ORD-2026-00821 Delivered",
+                description: "Your order has been successfully delivered and signed by authorized person",
+                status: "completed",
+                timestamp: new Date(Date.now() - 86400000)?.toISOString(),
+                details: {
+                  orderNumber: "ORD-2026-00821",
+                  deliveryDate: "06/01/2026",
+                  receivedBy: "Ramesh Singh",
+                  deliveryTime: "02:45 PM",
+                },
+              },
+              {
+                id: 8,
+                type: "payment",
+                title: "Payment Reminder - ₹3,45,670",
+                description: "Invoice #INV-2025-12-1189 payment is due on 10/01/2026",
+                status: "pending",
+                timestamp: new Date(Date.now() - 172800000)?.toISOString(),
+                details: {
+                  invoiceNumber: "INV-2025-12-1189",
+                  amount: "₹3,45,670",
+                  dueDate: "10/01/2026",
+                  daysRemaining: "3 days",
+                },
+              },
+            ],
+            urgentNotifications: [
+              {
+                id: 1,
+                title: "Payment Due - Invoice #INV-2025-12-1189",
+                message: "Payment of ₹3,45,670 is due on 10/01/2026. Please process payment to avoid late fees",
+                priority: "high",
+                dueDate: "2026-01-10",
+                actionLabel: "View Invoice",
+                actionPath: "/sp-invoice-management",
+              },
+              {
+                id: 2,
+                title: "Credit Limit Alert",
+                message: "You have utilized 62.3% of your credit limit. Consider clearing pending dues to maintain smooth operations",
+                priority: "medium",
+                actionLabel: "View Financial Dashboard",
+                actionPath: "/sp-financial-dashboard",
+              },
+              {
+                id: 3,
+                title: "New Scheme Available",
+                message: "Special discount scheme on Veeba Sauces range - 15% off valid till 31/01/2026",
+                priority: "low",
+                dueDate: "2026-01-31",
+                actionLabel: "View Details",
+                actionPath: "/sp-notifications-center",
+              },
+              {
+                id: 4,
+                title: "Order Confirmation Pending",
+                message: "Order #ORD-2026-00847 requires your confirmation. Please review and confirm to proceed with processing",
+                priority: "medium",
+                actionLabel: "View Order",
+                actionPath: "/sp-order-management",
+              },
+            ],
+          };
+          setDashboardData(showData);
+          setLoading(false);
+        }, 300);
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [navigate]);
+
+  const handleNotificationAction = (notification) => {
+    if (notification.clearStorageOnAction) {
+      localStorage.clear();
+    }
+    navigate(notification.actionPath);
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-background pt-16">
+          <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8 py-6">
+            <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+              <div className="text-center">
+                <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="font-caption text-muted-foreground">Loading dashboard...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+
+  return (
+    <>
+      <Helmet>
+        <title>Dashboard - Veeba Salesperson Portal</title>
+        <meta name="description" content="View your account overview, recent activities, and key business metrics on Veeba Foods customer portal dashboard" />
+      </Helmet>
+      <Header />
+      <div className="min-h-screen bg-background pt-16">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8 py-6">
+          <Breadcrumb />
+
+          <div className="space-y-6">
+            <WelcomeBanner
+              customerName={dashboardData?.salesperson?.name}
+              lastLogin={dashboardData?.salesperson?.lastLogin}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+              {dashboardData?.metrics?.map((metric) => (
+                <MetricCard key={metric?.id} {...metric} />
+              ))}
+            </div>
+
+            <QuickActionsPanel />
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <RecentActivitiesFeed activities={dashboardData?.recentActivities} />
+              </div>
+
+              <div className="lg:col-span-1">
+                <UrgentNotificationsPanel notifications={dashboardData?.urgentNotifications} onAction={handleNotificationAction} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default SPDashboard;

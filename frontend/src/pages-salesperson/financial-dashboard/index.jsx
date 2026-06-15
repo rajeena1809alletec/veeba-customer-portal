@@ -11,7 +11,8 @@ import StatementGenerator from './components/StatementGenerator';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { useNavigate } from 'react-router-dom';
-import { getCustomerLedgerEntries, getCustomerByCustomerId, getCurrentMonthInvoiceAmount, getOverdueInvoiceAmount } from 'services/BusinessCentralAPI';
+// import { getCustomerLedgerEntries, getCustomerByCustomerId, getCurrentMonthInvoiceAmount, getOverdueInvoiceAmount } from 'services/BusinessCentralAPI';
+import { getCustomersByNoList, getSPLedgerEntries, getSPCurrentMonthInvoiceAmount, getSPOverdueInvoiceAmount } from 'services/BusinessCentralAPI';
 
 import CustomDateRangeModal from './components/CustomDateRangeModal';
 
@@ -47,7 +48,7 @@ const getTodayDate = () => {
 
 
 
-const FinancialDashboard = () => {
+const SPFinancialDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionType, setTransactionType] = useState('all');
   const [dateRange, setDateRange] = useState('all');
@@ -68,6 +69,7 @@ const FinancialDashboard = () => {
   const [customDateRange, setCustomDateRange] = useState({ start: null, end: null });
 
   const [creditUtilization, setCreditUtilization] = useState('0%');
+  const [assignmentError, setAssignmentError] = useState('');
 
 
   const financialMetrics = [
@@ -160,12 +162,38 @@ const FinancialDashboard = () => {
       try {
         setLoading(true);
 
-        // Get customer ID from localStorage
-        const customerId = localStorage.getItem('customerId');
+        const salespersonCode = localStorage.getItem('salespersonCode');
+        const customersForSalesperson = localStorage.getItem('customersForSalesperson');
+        const ASOSalespersons = localStorage.getItem('ASOSalespersons');
+        const effectiveSalespersonCodes = ASOSalespersons?.trim() ? ASOSalespersons : salespersonCode;
 
-        if (!customerId) {
-          console.error('Customer ID not found');
+        const showAssignmentAlert = (message) => {
+          setAssignmentError(message);
+          setAllTransactions([]);
+          setFilteredTransactions([]);
+          setCustomerFinancialData({ balanceLCY: 0, creditLimitLCY: 0 });
+          setCurrentMonthAmount(0);
+          setOverdueAmount(0);
+          setCreditUtilization('0%');
+          setLoading(false);
+          // alert(message);
+        };
+
+
+        if (!salespersonCode) {
+          console.error('Salesperson code not found');
           navigate('/login');
+          return;
+        }
+        if (!ASOSalespersons || ASOSalespersons.trim() === '') {
+          console.error('No ASO salespersons mapped for this salesperson');
+          showAssignmentAlert('No ASO salespersons are mapped to the currently logged-in salesperson. Please contact your administrator.');
+          return;
+        }
+
+        if (!customersForSalesperson || customersForSalesperson.trim() === '') {
+          console.error('No customers available for this salesperson');
+          showAssignmentAlert('No customers are available for this salesperson. Please contact your administrator.');
           return;
         }
 
@@ -173,29 +201,47 @@ const FinancialDashboard = () => {
         const today = getTodayDate();
         console.log('Fetching customer data for month:', startDate, 'to', endDate);
 
-        // Fetch ledger entries from BC API
-        const [customerResult, ledgerResult, currentMonthResult, overdueResult] = await Promise.all([
-          getCustomerByCustomerId(customerId),
-          getCustomerLedgerEntries(customerId, { open: true }),
-          getCurrentMonthInvoiceAmount(customerId, startDate, endDate),
-          getOverdueInvoiceAmount(customerId, today) // NEW API CALL
+        const [customerListResult, ledgerResult, currentMonthResult, overdueResult] = await Promise.all([
+          getCustomersByNoList(customersForSalesperson),
+          getSPLedgerEntries(customersForSalesperson, { open: true }),
+          getSPCurrentMonthInvoiceAmount(effectiveSalespersonCodes, startDate, endDate),
+          getSPOverdueInvoiceAmount(effectiveSalespersonCodes, today)
         ]);
 
-        if (customerResult.success) {
-          const customerData = customerResult.data;
-          // console.log('Customer financial data:', customerData);
-          setCustomerFinancialData(customerData);
+        if (customerListResult.success && customerListResult.data.length > 0) {
+          let totalBalanceLCY = 0;
+          let totalCreditLimitLCY = 0;
 
-          const balanceLCY = customerData.balanceLCY || 0;
-          const creditLimitLCY = customerData.creditLimitLCY || 0;
+          customerListResult.data.forEach(customer => {
+            totalBalanceLCY += customer.balanceLCY || 0;
+            totalCreditLimitLCY += customer.creditLimitLCY || 0;
+          });
 
-          // const utilizationPercentage = (balanceLCY / creditLimitLCY) * 100;
-          const utilizationPercentage = creditLimitLCY > 0 ? (balanceLCY / creditLimitLCY) * 100 : 0;
+          setCustomerFinancialData({ balanceLCY: totalBalanceLCY, creditLimitLCY: totalCreditLimitLCY });
+
+          const utilizationPercentage = totalCreditLimitLCY > 0 ? (totalBalanceLCY / totalCreditLimitLCY) * 100 : 0;
+          console.log('utilizationPercentage: ', utilizationPercentage)
           setCreditUtilization(`${utilizationPercentage.toFixed(1)}%`);
-
         } else {
-          console.error('Failed to fetch customer data:', customerResult.error);
+          console.error('Failed to fetch customer list data:', customerListResult.error);
         }
+
+        // if (customerResult.success) {
+        //   const customerData = customerResult.data;
+        //   // console.log('Customer financial data:', customerData);
+        //   setCustomerFinancialData(customerData);
+
+        //   const balanceLCY = customerData.balanceLCY || 0;
+        //   const creditLimitLCY = customerData.creditLimitLCY || 0;
+
+        //   // const utilizationPercentage = (balanceLCY / creditLimitLCY) * 100;
+        //   const utilizationPercentage = creditLimitLCY > 0 ? (balanceLCY / creditLimitLCY) * 100 : 0;
+        //   setCreditUtilization(`${utilizationPercentage.toFixed(1)}%`);
+
+        // } else {
+        //   console.error('Failed to fetch customer data:', customerResult.error);
+        // }
+
 
         if (currentMonthResult.success) {
           const monthData = currentMonthResult.data;
@@ -285,11 +331,14 @@ const FinancialDashboard = () => {
               paymentMode: type === 'payment' ? 'Bank Transfer' : null,
               originalAmount: entry.originalAmtLCY,
               remainingAmt: entry.remainingAmount,
-              remainingAmtLCY: entry.remainingAmtLCY
+              remainingAmtLCY: entry.remainingAmtLCY,
+              customerNo: entry.customerNo,
+              salespersonCode: entry.salespersonCode
             };
           });
 
           setAllTransactions(mappedTransactions);
+          console.log('allTransactionsssss: ', allTransactions);
           setFilteredTransactions(mappedTransactions);
         } else {
           console.error('Failed to fetch ledger entries:', ledgerResult.error);
@@ -316,7 +365,9 @@ const FinancialDashboard = () => {
       filtered = filtered.filter(t =>
         t?.reference?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.amount?.toString()?.includes(searchTerm) ||
-        t?.externalReference?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+        t?.externalReference?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.customerNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.salespersonCode?.toLowerCase()?.includes(searchTerm?.toLowerCase())
       );
     }
 
@@ -509,8 +560,8 @@ const FinancialDashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Financial Dashboard - Veeba Foods Customer Portal</title>
-        <meta name="description" content="View your financial information, outstanding balances, payment history, and account statements with real-time ERP integration" />
+        <title>Financial Dashboard - Veeba Food Salesperson Portal</title>
+        <meta name="description" content="View aggregated financial information, outstanding balances, and transaction history for assigned customers" />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Header />
@@ -518,6 +569,21 @@ const FinancialDashboard = () => {
         <main className="pt-16">
           <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
             <Breadcrumb />
+            {assignmentError && (
+              <div className="mb-6 md:mb-8">
+                <div className="bg-error/10 border border-error/30 rounded-xl p-4 md:p-5 flex items-start gap-3">
+                  <Icon name="AlertTriangle" size={24} color="var(--color-error)" className="flex-shrink-0 mt-1" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-heading font-semibold text-sm md:text-base text-foreground mb-1">
+                      Assignment Alert
+                    </h3>
+                    <p className="font-body text-sm text-muted-foreground">
+                      {assignmentError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
               <div>
@@ -568,8 +634,8 @@ const FinancialDashboard = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-8">
-              <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 mb-6 md:mb-8">
+              <div className="lg:col-span-9 space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground">
@@ -603,7 +669,7 @@ const FinancialDashboard = () => {
                 <AgingAnalysisChart data={agingData} />
               </div>
 
-              <div className="space-y-6">
+              <div className="lg:col-span-3 space-y-6">
                 <div>
                   <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground mb-4">
                     Payment Alerts
@@ -749,4 +815,4 @@ const FinancialDashboard = () => {
   );
 };
 
-export default FinancialDashboard;
+export default SPFinancialDashboard;
