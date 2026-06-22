@@ -62,11 +62,14 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                 Dispatch Date
               </th>
               <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
+                Driver Name
+              </th>
+              <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
                 Driver Contact
               </th>
-              <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
+              {/* <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
                 Actions
-              </th>
+              </th> */}
             </tr>
           </thead>
           <tbody>
@@ -109,10 +112,15 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                   </td>
                   <td className="p-4">
                     <span className="font-body text-sm text-foreground">
-                      {transaction?.driverContact || '-'}
+                      {transaction?.driverName || '-'}
                     </span>
                   </td>
                   <td className="p-4">
+                    <span className="font-body text-sm text-foreground">
+                      {transaction?.driverContact || '-'}
+                    </span>
+                  </td>
+                  {/* <td className="p-4">
                     <div className="flex items-center justify-center">
                       <button
                         onClick={() => onViewDetails(transaction)}
@@ -122,7 +130,7 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                         <Icon name="Eye" size={18} color="var(--color-muted-foreground)" />
                       </button>
                     </div>
-                  </td>
+                  </td> */}
                 </tr>
               ))
             )}
@@ -169,6 +177,10 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                 <div>
                   <p className="font-caption text-xs text-muted-foreground">Dispatch Date</p>
                   <p className="font-body text-sm text-foreground">{formatDate(transaction?.dispatchDate)}</p>
+                </div>
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">Driver Name</p>
+                  <p className="font-body text-sm text-foreground">{transaction?.driverName || '-'}</p>
                 </div>
                 <div>
                   <p className="font-caption text-xs text-muted-foreground">Driver Contact</p>

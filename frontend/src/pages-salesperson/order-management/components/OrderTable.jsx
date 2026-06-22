@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import OrderTableRow from './OrderTableRow';
 
 const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
+  // console.log('orderssss: ', orders)
   const handleSort = (field) => {
     const direction = sortConfig?.field === field && sortConfig?.direction === 'asc' ? 'desc' : 'asc';
     onSort(field, direction);
@@ -35,6 +36,33 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
                 >
                   Order Number
                   <SortIcon field="orderNumber" />
+                </button>
+              </th>
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('customerNo')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Customer No
+                  <SortIcon field="customerNo" />
+                </button>
+              </th>
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('salespersonCode')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Salesperson Code
+                  <SortIcon field="salespersonCode" />
+                </button>
+              </th>
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('salespersonName')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Salesperson Name
+                  <SortIcon field="salespersonName" />
                 </button>
               </th>
               <th className="px-4 py-4 text-left">
@@ -89,7 +117,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="px-4 py-12 text-center">
+                <td colSpan="10" className="px-4 py-12 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                       <Icon name="ShoppingCart" size={32} color="var(--color-muted-foreground)" />

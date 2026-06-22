@@ -68,7 +68,7 @@ const StatementGenerator = ({ onGenerate }) => {
         </div>
       </div>
       <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
+        {/* <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -90,9 +90,9 @@ const StatementGenerator = ({ onGenerate }) => {
           >
             This Year
           </Button>
-        </div>
+        </div> */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <Input
             type="date"
             label="Start Date"

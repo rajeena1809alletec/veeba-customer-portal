@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import OrderTableRow from './OrderTableRow';
 
 const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
+  // console.log('orderssss: ', orders)
   const handleSort = (field) => {
     const direction = sortConfig?.field === field && sortConfig?.direction === 'asc' ? 'desc' : 'asc';
     onSort(field, direction);

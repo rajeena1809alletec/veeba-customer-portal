@@ -4,26 +4,30 @@ import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
 
-const OrderFilters = ({ 
-  filters, 
-  onFilterChange, 
-  onClearFilters, 
-  resultsCount 
+const OrderFilters = ({
+  filters,
+  onFilterChange,
+  onClearFilters,
+  resultsCount,
+  customDateRange
 }) => {
   const statusOptions = [
     { value: 'all', label: 'All Status' },
     { value: 'open', label: 'Open' },
-    { value: 'dispatched', label: 'Dispatched' },
-    { value: 'invoiced', label: 'Invoiced' },
-    { value: 'cancelled', label: 'Cancelled' }
+    { value: 'released', label: 'Released' },
+    { value: 'pending approval', label: 'Pending Approval' },
+    { value: 'blocked', label: 'Blocked' },
+    // { value: 'dispatched', label: 'Dispatched' },
+    // { value: 'invoiced', label: 'Invoiced' },
+    // { value: 'cancelled', label: 'Cancelled' }
   ];
-
   const dateRangeOptions = [
     { value: 'all', label: 'All Time' },
     { value: 'today', label: 'Today' },
     { value: 'week', label: 'This Week' },
     { value: 'month', label: 'This Month' },
     { value: 'quarter', label: 'This Quarter' },
+    { value: 'year', label: 'This Year' },    // ← add this
     { value: 'custom', label: 'Custom Range' }
   ];
 
@@ -43,7 +47,7 @@ const OrderFilters = ({
             </p>
           </div>
         </div>
-        
+
         <Button
           variant="ghost"
           size="sm"
@@ -77,7 +81,25 @@ const OrderFilters = ({
           onChange={(value) => onFilterChange('dateRange', value)}
         />
 
-        {filters?.dateRange === 'custom' && (
+        {filters?.dateRange === 'custom' && customDateRange?.start && customDateRange?.end && (
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+              <Icon name="CalendarDays" size={14} color="var(--color-primary)" />
+              <span className="font-caption text-xs text-primary font-medium">
+                {customDateRange.start} → {customDateRange.end}
+              </span>
+              <button
+                onClick={() => onFilterChange('dateRange', 'all')}
+                className="ml-1 hover:opacity-70 transition-smooth"
+                aria-label="Clear custom date range"
+              >
+                <Icon name="X" size={12} color="var(--color-primary)" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* {filters?.dateRange === 'custom' && (
           <div className="flex gap-2">
             <Input
               type="date"
@@ -92,7 +114,7 @@ const OrderFilters = ({
               className="flex-1"
             />
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

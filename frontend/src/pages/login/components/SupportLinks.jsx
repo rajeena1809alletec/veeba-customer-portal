@@ -22,9 +22,9 @@ const SupportLinks = () => {
     {
       icon: 'Phone',
       title: 'Call Us',
-      description: 'Mon-Sat, 9 AM - 6 PM IST',
-      link: 'tel:+911234567890',
-      linkText: '+91 123 456 7890',
+      description: '',
+      link: '',
+      // linkText: '',
       external: true
     }
   ];

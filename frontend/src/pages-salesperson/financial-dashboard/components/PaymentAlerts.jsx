@@ -93,7 +93,7 @@ const PaymentAlerts = ({ alerts, onPayNow, onViewDetails }) => {
                   >
                     View
                   </Button>
-                  <Button
+                  {/* <Button
                     variant={alert?.type === 'overdue' ? 'destructive' : 'default'}
                     size="sm"
                     iconName="CreditCard"
@@ -102,7 +102,7 @@ const PaymentAlerts = ({ alerts, onPayNow, onViewDetails }) => {
                     className="flex-1"
                   >
                     Pay Now
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </div>

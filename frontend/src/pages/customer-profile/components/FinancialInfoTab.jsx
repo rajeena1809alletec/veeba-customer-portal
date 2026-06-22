@@ -11,7 +11,12 @@ const FinancialInfoTab = ({ financialData }) => {
   };
 
   const getUtilizationPercentage = () => {
-    return ((financialData?.creditUsed / financialData?.creditLimit) * 100)?.toFixed(1);
+    const creditLimit = financialData?.creditLimit || 0;
+    const creditUsed = financialData?.creditUsed || 0;
+
+    if (creditLimit <= 0) return '0.0';
+
+    return ((creditUsed / creditLimit) * 100).toFixed(1);
   };
 
   const getUtilizationColor = () => {
@@ -25,51 +30,55 @@ const FinancialInfoTab = ({ financialData }) => {
     <div className="space-y-6">
       <h3 className="text-xl font-heading font-semibold text-foreground mb-6">Financial Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-6 border border-primary/20 shadow-warm-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-              <Icon name="CreditCard" size={24} color="var(--color-primary)" />
+        {financialData?.creditLimit > 1 && (
+          <>
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-6 border border-primary/20 shadow-warm-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
+                  <Icon name="CreditCard" size={24} color="var(--color-primary)" />
+                </div>
+                <div>
+                  <p className="text-sm font-caption text-muted-foreground">Credit Limit</p>
+                  <p className="text-2xl font-heading font-bold text-primary data-text">
+                    {formatCurrency(financialData?.creditLimit)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-xs font-caption">
+                <span className="text-muted-foreground">Available</span>
+                <span className="text-foreground font-semibold data-text">
+                  {formatCurrency((financialData?.creditLimit || 0) - (financialData?.creditUsed || 0))}
+                </span>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-caption text-muted-foreground">Credit Limit</p>
-              <p className="text-2xl font-heading font-bold text-primary data-text">
-                {formatCurrency(financialData?.creditLimit)}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between text-xs font-caption">
-            <span className="text-muted-foreground">Available</span>
-            <span className="text-foreground font-semibold data-text">
-              {formatCurrency(financialData?.creditLimit - financialData?.creditUsed)}
-            </span>
-          </div>
-        </div>
 
-        <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl p-6 border border-accent/20 shadow-warm-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center">
-              <Icon name="TrendingUp" size={24} color="var(--color-accent)" />
+            <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl p-6 border border-accent/20 shadow-warm-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center">
+                  <Icon name="TrendingUp" size={24} color="var(--color-accent)" />
+                </div>
+                <div>
+                  <p className="text-sm font-caption text-muted-foreground">Credit Used</p>
+                  <p className="text-2xl font-heading font-bold text-accent data-text">
+                    {formatCurrency(financialData?.creditUsed)}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-caption">
+                  <span className="text-muted-foreground">Utilization</span>
+                  <span className="text-foreground font-semibold">{getUtilizationPercentage()}%</span>
+                </div>
+                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${getUtilizationColor()} transition-smooth`}
+                    style={{ width: `${getUtilizationPercentage()}%` }}
+                  ></div>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-caption text-muted-foreground">Credit Used</p>
-              <p className="text-2xl font-heading font-bold text-accent data-text">
-                {formatCurrency(financialData?.creditUsed)}
-              </p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-caption">
-              <span className="text-muted-foreground">Utilization</span>
-              <span className="text-foreground font-semibold">{getUtilizationPercentage()}%</span>
-            </div>
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className={`h-full ${getUtilizationColor()} transition-smooth`}
-                style={{ width: `${getUtilizationPercentage()}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
 
         <div className="bg-gradient-to-br from-warning/10 to-warning/5 rounded-xl p-6 border border-warning/20 shadow-warm-sm">
           <div className="flex items-center gap-3 mb-4">
@@ -88,7 +97,7 @@ const FinancialInfoTab = ({ financialData }) => {
           </p>
         </div>
       </div>
-      <div className="bg-card rounded-xl p-6 border border-border shadow-warm-sm">
+      {/* <div className="bg-card rounded-xl p-6 border border-border shadow-warm-sm">
         <h4 className="text-base font-heading font-semibold text-foreground mb-4">Pricing Information</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
@@ -148,7 +157,7 @@ const FinancialInfoTab = ({ financialData }) => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="bg-card rounded-xl p-6 border border-border shadow-warm-sm">
         <h4 className="text-base font-heading font-semibold text-foreground mb-4">Account Status</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -162,7 +171,7 @@ const FinancialInfoTab = ({ financialData }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+          {/* <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
               <Icon name="Calendar" size={20} color="var(--color-primary)" />
             </div>
@@ -190,7 +199,7 @@ const FinancialInfoTab = ({ financialData }) => {
               <p className="text-xs font-caption text-muted-foreground">Credit Rating</p>
               <p className="text-sm font-body font-semibold text-foreground">{financialData?.creditRating}</p>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="bg-primary/5 rounded-xl p-6 border border-primary/20">
@@ -202,10 +211,16 @@ const FinancialInfoTab = ({ financialData }) => {
             <h4 className="text-sm font-heading font-semibold text-foreground mb-2">Important Notes</h4>
             <ul className="text-sm font-caption text-muted-foreground space-y-1">
               <li>• All financial data is synced from Business Central ERP system</li>
-              <li>• Credit limit changes require approval from finance team</li>
+
+              {financialData?.creditLimit > 1 && (
+                <li>• Credit limit changes require approval from finance team</li>
+              )}
+
               <li>• Payment terms are based on your credit rating and payment history</li>
-              <li>• Pricing tiers are reviewed quarterly based on purchase volume</li>
-              <li>• Contact your account manager for credit limit increase requests</li>
+
+              {financialData?.creditLimit > 1 && (
+                <li>• Contact your account manager for credit limit increase requests</li>
+              )}
             </ul>
           </div>
         </div>

@@ -50,7 +50,7 @@ const CustomerProfile = () => {
 
         if (result.success) {
           const customerData = result.data;
-          console.log('Customer data fetched:', customerData);
+          // console.log('Customer data fetched:', customerData);
 
           // Map BC data to your component structure
           setCompanyData({
@@ -101,13 +101,13 @@ const CustomerProfile = () => {
 
           // Set default financial data (customize based on your BC fields)
           setFinancialData({
-            creditLimit: customerData.creditLimitLCY,
-            creditUsed: 0,
-            paymentTerms: 'Net 30 Days',
-            priceList: 'Standard',
+            creditLimit: customerData.creditLimitLCY || 0,
+            creditUsed: customerData.balanceLCY || 0,
+            paymentTerms: customerData.paymentTermsCode || 'Net 30 Days',
+            priceList: customerData.customerPriceGroup || 'Standard',
             discountTier: 'Standard',
-            customerCategory: 'Regular',
-            currency: 'INR (₹)',
+            customerCategory: customerData.customerPostingGroup || 'Regular',
+            currency: customerData.currencyCode || 'INR (₹)',
             tradeDiscount: '0%',
             schemeEligible: false,
             lastReviewDate: 'N/A',
@@ -435,8 +435,8 @@ const CustomerProfile = () => {
     { id: 'contacts', label: 'Contact Details', icon: 'Users' },
     { id: 'addresses', label: 'Addresses', icon: 'MapPin' },
     { id: 'financial', label: 'Financial Info', icon: 'DollarSign' },
-    { id: 'documents', label: 'Documents', icon: 'FileText' },
-    { id: 'history', label: 'Change History', icon: 'History' }
+    // { id: 'documents', label: 'Documents', icon: 'FileText' },
+    // { id: 'history', label: 'Change History', icon: 'History' }
   ];
 
   const handleCompanyUpdate = (updatedData) => {
@@ -612,12 +612,12 @@ const CustomerProfile = () => {
                 {activeTab === 'financial' && (
                   <FinancialInfoTab financialData={financialData} />
                 )}
-                {activeTab === 'documents' && (
+                {/* {activeTab === 'documents' && (
                   <DocumentsTab documents={documents} />
                 )}
                 {activeTab === 'history' && (
                   <ChangeHistoryTab history={changeHistory} />
-                )}
+                )} */}
               </div>
             </div>
           </div>

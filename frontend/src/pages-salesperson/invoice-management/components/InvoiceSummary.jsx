@@ -9,7 +9,7 @@ const InvoiceSummary = ({ summary }) => {
       icon: 'FileText',
       iconColor: 'var(--color-primary)',
       bgColor: 'bg-primary/10',
-      trend: '+12.5%',
+      // trend: '+12.5%',
       trendUp: true
     },
     {
@@ -27,15 +27,15 @@ const InvoiceSummary = ({ summary }) => {
       iconColor: 'var(--color-error)',
       bgColor: 'bg-error/10',
       count: `${summary?.overdueCount} invoices`
-    },
-    {
-      title: 'Total GST',
-      value: `₹${summary?.totalGST?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      icon: 'Receipt',
-      iconColor: 'var(--color-accent)',
-      bgColor: 'bg-accent/10',
-      subtitle: 'This month'
     }
+    // {
+    //   title: 'Total GST',
+    //   value: `₹${summary?.totalGST?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    //   icon: 'Receipt',
+    //   iconColor: 'var(--color-accent)',
+    //   bgColor: 'bg-accent/10',
+    //   subtitle: 'This month'
+    // }
   ];
 
   return (

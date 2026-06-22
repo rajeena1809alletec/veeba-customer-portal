@@ -15,7 +15,7 @@ const TrustBadges = () => {
     },
     {
       icon: 'Award',
-      title: 'ISO Certified',
+      title: 'ISO 27001 Certified',
       description: 'Quality assured services'
     }
   ];

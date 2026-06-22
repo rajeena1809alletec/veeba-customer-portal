@@ -104,9 +104,9 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
               <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
                 Status
               </th>
-              <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
+              {/* <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
                 Actions
-              </th>
+              </th> */}
             </tr>
           </thead>
           <tbody>
@@ -161,7 +161,7 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                     </span>
                   </div>
                 </td>
-                <td className="p-4">
+                {/* <td className="p-4">
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => onViewDetails(transaction)}
@@ -180,7 +180,7 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                       </button>
                     )}
                   </div>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>

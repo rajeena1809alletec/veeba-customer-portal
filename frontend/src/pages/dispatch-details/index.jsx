@@ -11,7 +11,7 @@ import StatementGenerator from './components/StatementGenerator';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { useNavigate } from 'react-router-dom';
-import { getCustomerLedgerEntries, getCustomerByCustomerId, getCurrentMonthInvoiceAmount, getOverdueInvoiceAmount, getDispatchDetails } from 'services/BusinessCentralAPI';
+import { getDispatchDetails } from 'services/BusinessCentralAPI';
 
 import CustomDateRangeModal from './components/CustomDateRangeModal';
 
@@ -34,6 +34,27 @@ const getCurrentMonthDateRange = () => {
   return {
     startDate: formatDate(firstDay),
     endDate: formatDate(lastDay)
+  };
+};
+const getCurrentFinancialYearDateRange = () => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+
+  let startYear;
+  let endYear;
+
+  if (currentMonth >= 4) {
+    startYear = currentYear;
+    endYear = currentYear + 1;
+  } else {
+    startYear = currentYear - 1;
+    endYear = currentYear;
+  }
+
+  return {
+    startDate: `${startYear}-04-01`,
+    endDate: `${endYear}-03-31`
   };
 };
 
@@ -170,13 +191,10 @@ const DispatchDetails = () => {
           return;
         }
 
-        const { startDate, endDate } = getCurrentMonthDateRange();
-        const today = getTodayDate();
-        console.log('Fetching customer data for month:', startDate, 'to', endDate);
+        const { startDate, endDate } = getCurrentFinancialYearDateRange();
+        console.log('Fetching customer data for financial year:', startDate, 'to', endDate);
 
-        // Fetch ledger entries from BC API
-
-        const dispatchResult = await getDispatchDetails(customerId);
+        const dispatchResult = await getDispatchDetails(customerId, startDate, endDate);
 
         if (dispatchResult.success) {
           const mapped = dispatchResult.data.map((entry) => ({
@@ -187,6 +205,7 @@ const DispatchDetails = () => {
             lrNo: entry.lrRRNo || '',
             transporterName: entry.transporterVendorNo || '',
             driverContact: entry.driverMobNo || '',           // not in API yet
+            driverName: entry.driverName || ''
           }));
 
           setAllTransactions(mapped);
@@ -219,7 +238,8 @@ const DispatchDetails = () => {
       filtered = filtered.filter(t =>
         t?.invoiceNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.lrNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.transporterName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+        t?.transporterName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.driverName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
       );
     }
 
@@ -322,31 +342,39 @@ const DispatchDetails = () => {
   };
   const handleDownloadAllEntries = () => {
     if (!filteredTransactions || filteredTransactions.length === 0) {
-      alert('No transactions to download.');
+      alert('No dispatch entries to download.');
       return;
     }
 
-    const headers = ['Type', 'Date', 'Reference', 'Amount', 'Remaining Amount', 'Status', 'Due Date'];
+    const headers = [
+      'Invoice No',
+      'Invoice Date',
+      'Dispatch Date',
+      'LR No',
+      'Transporter Name',
+      'Driver Contact',
+      'Driver Name'
+    ];
 
     const rows = filteredTransactions.map(t => [
-      t.type || '',
-      t.date || '',
-      t.reference || '',
-      t.amount?.toFixed(2) || '0.00',
-      t.remainingAmtLCY !== undefined ? Math.abs(t.remainingAmtLCY).toFixed(2) : '0.00',
-      t.status || '',
-      t.dueDate || ''
+      t.invoiceNo || '',
+      t.invoiceDate || '',
+      t.dispatchDate || '',
+      t.lrNo || '',
+      t.transporterName || '',
+      t.driverContact || '',
+      t.driverName || ''
     ]);
 
     const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `dispatch_entries_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -447,14 +475,14 @@ const DispatchDetails = () => {
                     <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground">
                       All Dispatch Details
                     </h2>
-                    {/* <Button
+                    <Button
                       variant="outline"
                       iconName="Download"
                       iconPosition="left"
                       onClick={handleDownloadAllEntries}
                     >
                       Download All Entries
-                    </Button> */}
+                    </Button>
                   </div>
                   <DispatchFilters
                     searchTerm={searchTerm}

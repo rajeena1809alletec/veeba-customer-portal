@@ -51,14 +51,14 @@ const OrderSummaryCard = ({ summary }) => {
           </span>
         </div>
 
-        {summary?.specialInstructions && (
+        {/* {summary?.specialInstructions && (
           <div className="pt-3 mt-3 border-t border-border">
             <p className="text-sm text-muted-foreground font-caption mb-2">Special Instructions</p>
             <p className="text-sm md:text-base text-foreground font-body bg-muted/30 p-3 rounded-md">
               {summary?.specialInstructions}
             </p>
           </div>
-        )}
+        )} */}
 
         {summary?.referenceNumber && (
           <div className="flex justify-between items-center py-2">

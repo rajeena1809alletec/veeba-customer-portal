@@ -333,7 +333,8 @@ const SPFinancialDashboard = () => {
               remainingAmt: entry.remainingAmount,
               remainingAmtLCY: entry.remainingAmtLCY,
               customerNo: entry.customerNo,
-              salespersonCode: entry.salespersonCode
+              salespersonCode: entry.salespersonCode,
+              salespersonName: entry.salesperson?.[0]?.name || '',
             };
           });
 
@@ -367,7 +368,8 @@ const SPFinancialDashboard = () => {
         t?.amount?.toString()?.includes(searchTerm) ||
         t?.externalReference?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.customerNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.salespersonCode?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+        t?.salespersonCode?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.salespersonName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
       );
     }
 
@@ -488,12 +490,25 @@ const SPFinancialDashboard = () => {
       return;
     }
 
-    const headers = ['Type', 'Date', 'Reference', 'Amount', 'Remaining Amount', 'Status', 'Due Date'];
-
+    const headers = [
+      'Type',
+      'Date',
+      'Reference',
+      'Customer No',
+      'Salesperson Code',
+      'Salesperson Name',
+      'Amount',
+      'Remaining Amount',
+      'Status',
+      'Due Date'
+    ];
     const rows = filteredTransactions.map(t => [
       t.type || '',
       t.date || '',
       t.reference || '',
+      t.customerNo || '',
+      t.salespersonCode || '',
+      t.salespersonName || '',
       t.amount?.toFixed(2) || '0.00',
       t.remainingAmtLCY !== undefined ? Math.abs(t.remainingAmtLCY).toFixed(2) : '0.00',
       t.status || '',
@@ -534,6 +549,13 @@ const SPFinancialDashboard = () => {
     console.log('Generating statement:', params);
     alert(`Statement generated for ${params?.startDate} to ${params?.endDate} in ${params?.format?.toUpperCase()} format`);
   };
+
+  const creditLimit = customerFinancialData?.creditLimitLCY || 0;
+  const outstandingBalance = customerFinancialData?.balanceLCY || 0;
+  const availableCredit = Math.max(creditLimit - outstandingBalance, 0);
+
+  const totalInvoices = allTransactions.filter((t) => t?.type === 'Invoice').length;
+  const totalPayments = allTransactions.filter((t) => t?.type === 'Payment').length;
 
   if (loading) {
     return (
@@ -595,7 +617,7 @@ const SPFinancialDashboard = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <Button
+                {/* <Button
                   variant="outline"
                   iconName="RefreshCw"
                   iconPosition="left"
@@ -610,7 +632,7 @@ const SPFinancialDashboard = () => {
                   onClick={() => setShowPaymentModal(true)}
                 >
                   Make Payment
-                </Button>
+                </Button> */}
               </div>
             </div>
 
@@ -628,14 +650,14 @@ const SPFinancialDashboard = () => {
                     Credit Limit Alert
                   </h3>
                   <p className="font-body text-sm text-muted-foreground">
-                    You have utilized {creditUtilization} of your credit limit. Consider settling outstanding invoices to free up credit.
+                    You have utilized {creditUtilization} of your credit limit.
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 mb-6 md:mb-8">
-              <div className="lg:col-span-9 space-y-6">
+              <div className="lg:col-span-10 space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground">
@@ -669,16 +691,16 @@ const SPFinancialDashboard = () => {
                 <AgingAnalysisChart data={agingData} />
               </div>
 
-              <div className="lg:col-span-3 space-y-6">
+              <div className="lg:col-span-2 space-y-6">
                 <div>
-                  <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground mb-4">
+                  {/* <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground mb-4">
                     Payment Alerts
-                  </h2>
-                  <PaymentAlerts
+                  </h2> */}
+                  {/* <PaymentAlerts
                     alerts={paymentAlerts}
                     onPayNow={handlePayNow}
                     onViewDetails={handleViewDetails}
-                  />
+                  /> */}
                 </div>
 
                 <StatementGenerator onGenerate={handleGenerateStatement} />
@@ -704,18 +726,34 @@ const SPFinancialDashboard = () => {
                 <div className="space-y-3">
                   <h4 className="font-heading font-medium text-sm text-foreground">Payment Terms</h4>
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    {/* <div className="flex justify-between">
                       <span className="font-caption text-sm text-muted-foreground">Credit Period</span>
                       <span className="font-body text-sm text-foreground">30 Days</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-caption text-sm text-muted-foreground">Credit Limit</span>
-                      <span className="font-body text-sm text-foreground data-text">₹20,00,000.00</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-caption text-sm text-muted-foreground">Available Credit</span>
-                      <span className="font-body text-sm text-success data-text">₹7,54,319.50</span>
-                    </div>
+                    </div> */}
+
+                    {creditLimit > 0 && (
+                      <div className="flex justify-between">
+                        <span className="font-caption text-sm text-muted-foreground">Credit Limit</span>
+                        <span className="font-body text-sm text-foreground data-text">
+                          ₹{creditLimit.toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </span>
+                      </div>
+                    )}
+
+                    {creditLimit > 0 && (
+                      <div className="flex justify-between">
+                        <span className="font-caption text-sm text-muted-foreground">Available Credit</span>
+                        <span className="font-body text-sm text-success data-text">
+                          ₹{availableCredit.toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -724,16 +762,16 @@ const SPFinancialDashboard = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="font-caption text-sm text-muted-foreground">Total Invoices (MTD)</span>
-                      <span className="font-body text-sm text-foreground">12</span>
+                      <span className="font-body text-sm text-foreground">{totalInvoices}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-caption text-sm text-muted-foreground">Total Payments (MTD)</span>
-                      <span className="font-body text-sm text-foreground">8</span>
+                      <span className="font-body text-sm text-foreground">{totalPayments}</span>
                     </div>
-                    <div className="flex justify-between">
+                    {/* <div className="flex justify-between">
                       <span className="font-caption text-sm text-muted-foreground">Average Payment Days</span>
                       <span className="font-body text-sm text-foreground">28 Days</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>

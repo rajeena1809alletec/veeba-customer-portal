@@ -123,6 +123,9 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                   /> */}
                 </div>
               </th>
+              <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
+                Salesperson Name
+              </th>
               <th
                 className="text-right p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
                 onClick={() => handleSort('amount')}
@@ -151,9 +154,9 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
               <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
                 Status
               </th>
-              <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
+              {/* <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
                 Actions
-              </th>
+              </th> */}
             </tr>
           </thead>
           <tbody>
@@ -197,6 +200,11 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                     {transaction?.salespersonCode || '—'}
                   </span>
                 </td>
+                <td className="p-4">
+                  <span className="font-caption text-sm text-foreground data-text">
+                    {transaction?.salespersonName || '—'}
+                  </span>
+                </td>
                 <td className="p-4 text-right">
                   <span className="font-body text-sm font-semibold text-foreground data-text">
                     ₹{transaction?.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -219,7 +227,7 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                     </span>
                   </div>
                 </td>
-                <td className="p-4">
+                {/* <td className="p-4">
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => onViewDetails(transaction)}
@@ -238,7 +246,7 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                       </button>
                     )}
                   </div>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>
@@ -290,6 +298,12 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
               <span className="font-caption text-xs text-muted-foreground">Salesperson Code</span>
               <span className="font-body text-sm text-foreground data-text">
                 {transaction?.salespersonCode || '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-caption text-xs text-muted-foreground">Salesperson Name</span>
+              <span className="font-body text-sm text-foreground data-text">
+                {transaction?.salespersonName || '—'}
               </span>
             </div>
             {/* ✅ ADD REMAINING AMOUNT IN MOBILE VIEW */}

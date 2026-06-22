@@ -61,6 +61,8 @@ const Dashboard = () => {
         let creditUtilization = '0%';
         let creditUtilizationSubtitle = '₹0 of ₹0';
         let utilizationTrend = '0%';
+        let balanceLCY = 0;
+        let creditLimitLCY = 0;
 
         if (result.success) {
           const customerData = result.data;
@@ -68,8 +70,8 @@ const Dashboard = () => {
 
           customerName = customerData.contactName || 'Guest User';
           companyName = customerData.name || 'N/A';
-          const balanceLCY = customerData.balanceLCY || 0;
-          const creditLimitLCY = customerData.creditLimitLCY || 0;
+          balanceLCY = customerData.balanceLCY || 0;
+          creditLimitLCY = customerData.creditLimitLCY || 0;
 
           outstandingBalance = `₹${balanceLCY.toLocaleString('en-IN')}`;
 
@@ -166,23 +168,27 @@ const Dashboard = () => {
                 trendValue: "8.5% from last month",
                 navigateTo: "/financial-dashboard",
               },
-              {
-                id: 2,
-                title: "Credit Limit Utilization",
-                value: creditUtilization,
-                subtitle: creditUtilizationSubtitle,
-                icon: "TrendingUp",
-                iconColor: "var(--color-warning)",
-                bgColor: "bg-warning/10",
-                trend: "up",
-                trendValue: "5.2% increase",
-                navigateTo: "/financial-dashboard",
-              },
+
+              ...(creditLimitLCY > 1
+                ? [{
+                  id: 2,
+                  title: "Credit Limit Utilization",
+                  value: creditUtilization,
+                  subtitle: creditUtilizationSubtitle,
+                  icon: "TrendingUp",
+                  iconColor: "var(--color-warning)",
+                  bgColor: "bg-warning/10",
+                  trend: "up",
+                  trendValue: "5.2% increase",
+                  navigateTo: "/financial-dashboard",
+                }]
+                : []),
+
               {
                 id: 3,
-                title: "Invoiced Value(CM - FY)",
+                title: "Invoiced Value (CM)",
                 value: invoiceAmountCM,
-                subtitle: `FY Total: ${invoiceAmountFY}`,
+                subtitle: "Current Month",
                 icon: "ShoppingCart",
                 iconColor: "var(--color-primary)",
                 bgColor: "bg-primary/10",
@@ -192,18 +198,42 @@ const Dashboard = () => {
               },
               {
                 id: 4,
-                title: "Payment Received(CM - FY)",
+                title: "Invoiced Value (FY)",
+                value: invoiceAmountFY,
+                subtitle: "Financial Year Total",
+                icon: "ShoppingCart",
+                iconColor: "var(--color-primary)",
+                bgColor: "bg-primary/10",
+                trend: "up",
+                trendValue: "FY cumulative",
+                navigateTo: "/order-management",
+              },
+              {
+                id: 5,
+                title: "Payment Received (CM)",
                 value: paymentAmountCM,
-                subtitle: `FY Total: ${paymentAmountFY}`,
+                subtitle: "Current Month",
                 icon: "FileText",
                 iconColor: "var(--color-accent)",
                 bgColor: "bg-accent/10",
                 trend: "up",
-                trendValue: "12% increase",
+                trendValue: "Current month collection",
                 navigateTo: "/invoice-management",
               },
               {
-                id: 5,
+                id: 6,
+                title: "Payment Received (FY)",
+                value: paymentAmountFY,
+                subtitle: "Financial Year Total",
+                icon: "FileText",
+                iconColor: "var(--color-accent)",
+                bgColor: "bg-accent/10",
+                trend: "up",
+                trendValue: "FY cumulative",
+                navigateTo: "/invoice-management",
+              },
+              {
+                id: 7,
                 title: "Open Order Value",
                 value: openOrderValue,
                 subtitle: "",
@@ -215,7 +245,7 @@ const Dashboard = () => {
                 navigateTo: "/dashboard",
               },
               {
-                id: 6,
+                id: 8,
                 title: "Blocked Order Value",
                 value: blockedOrderValue,
                 subtitle: "",
@@ -354,7 +384,7 @@ const Dashboard = () => {
               {
                 id: 2,
                 title: "Credit Limit Alert",
-                message: "You have utilized 62.3% of your credit limit. Consider clearing pending dues to maintain smooth operations",
+                message: `You have utilized ${creditUtilization} of your credit limit. Consider clearing pending dues to maintain smooth operations`,
                 priority: "medium",
                 actionLabel: "View Financial Dashboard",
                 actionPath: "/financial-dashboard",

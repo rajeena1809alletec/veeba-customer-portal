@@ -2,7 +2,16 @@ import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const OrderHeader = ({ order, onRepeatOrder, onRaiseComplaint, onShare, onPrint }) => {
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
+
+const OrderHeader = ({ order, onDownloadExcel, onRaiseComplaint, onShare, onPrint }) => {
   const getStatusColor = (status) => {
     const statusColors = {
       'Confirmed': 'bg-primary/10 text-primary border-primary/20',
@@ -30,13 +39,13 @@ const OrderHeader = ({ order, onRepeatOrder, onRaiseComplaint, onShare, onPrint 
             <div className="flex items-center gap-2 text-muted-foreground">
               <Icon name="Calendar" size={18} />
               <span className="text-sm md:text-base font-body">
-                Order Date: <span className="text-foreground font-medium">{order?.orderDate}</span>
+                Order Date: <span className="text-foreground font-medium">{formatDate(order?.orderDate)}</span>
               </span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Icon name="Truck" size={18} />
               <span className="text-sm md:text-base font-body">
-                Expected: <span className="text-foreground font-medium">{order?.expectedDelivery}</span>
+                Expected: <span className="text-foreground font-medium">{formatDate(order?.expectedDelivery)}</span>
               </span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -60,12 +69,12 @@ const OrderHeader = ({ order, onRepeatOrder, onRaiseComplaint, onShare, onPrint 
       <div className="flex flex-wrap gap-2 md:gap-3">
         <Button
           variant="default"
-          iconName="RefreshCw"
+          iconName="Download"
           iconPosition="left"
-          onClick={onRepeatOrder}
+          onClick={onDownloadExcel}
           className="flex-1 sm:flex-none"
         >
-          Repeat Order
+          Download Excel
         </Button>
         <Button
           variant="outline"

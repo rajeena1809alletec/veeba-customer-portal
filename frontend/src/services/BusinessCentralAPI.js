@@ -321,9 +321,16 @@ export const getPaymentValueAmount = async (customerNo, dateFrom, dateTo) => {
 };
 
 
-export const getDispatchDetails = async (customerNo) => {
+export const getDispatchDetails = async (customerNo, postingDateFrom, postingDateTo) => {
     try {
         let filterQuery = `sellToCustomerNo eq '${customerNo}'`;
+        if (postingDateFrom && postingDateTo) {
+            filterQuery += ` and postingDate ge ${postingDateFrom} and postingDate le ${postingDateTo}`;
+        } else if (postingDateFrom) {
+            filterQuery += ` and postingDate ge ${postingDateFrom}`;
+        } else if (postingDateTo) {
+            filterQuery += ` and postingDate le ${postingDateTo}`;
+        }
 
         let queryParams = `$filter=${filterQuery}`;
         console.log('Dispatch Details URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/dispatchdetails?${queryParams}`);
@@ -792,6 +799,7 @@ export const getSPLedgerEntries = async (customersForSalesperson, filters = {}) 
         if (filters.top) {
             queryParams += `&$top=${filters.top}`;
         }
+        queryParams += '&$expand=salesperson';
 
 
         console.log('getSPLedgerEntries URL: ', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerLedgerEntries?${queryParams}`);
@@ -819,8 +827,8 @@ export const getSPLedgerEntries = async (customersForSalesperson, filters = {}) 
     }
 };
 
-export const getSPDispatchDetails = async (customersForSalesperson) => {
-    console.log("Fetching dispatch details for SP customers:", customersForSalesperson);
+export const getSPDispatchDetails = async (customersForSalesperson, postingDateFrom, postingDateTo) => {
+    console.log('Fetching dispatch details for SP customers:', customersForSalesperson, 'postingDateFrom:', postingDateFrom, 'postingDateTo:', postingDateTo);
 
     try {
         const customerNos = customersForSalesperson.split('|').map(c => c.trim()).filter(Boolean);
@@ -829,8 +837,16 @@ export const getSPDispatchDetails = async (customersForSalesperson) => {
             return { success: true, data: [] };
         }
         const customerFilter = customerNos.map(no => `sellToCustomerNo eq '${no}'`).join(' or ');
-        const filterQuery = `(${customerFilter})`;
-        const queryParams = `$filter=${filterQuery}`;
+        let filterQuery = `(${customerFilter})`;
+        if (postingDateFrom && postingDateTo) {
+            filterQuery += ` and postingDate ge ${postingDateFrom} and postingDate le ${postingDateTo}`;
+        } else if (postingDateFrom) {
+            filterQuery += ` and postingDate ge ${postingDateFrom}`;
+        } else if (postingDateTo) {
+            filterQuery += ` and postingDate le ${postingDateTo}`;
+        }
+
+        const queryParams = `$filter=${filterQuery}&$expand=salesperson`;
         console.log('SP Dispatch Details URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/dispatchdetails?${queryParams}`);
 
         const response = await axios.get(
@@ -927,6 +943,238 @@ export const getCustomersForMultipleSalespersons = async (asoCodes) => {
         return {
             success: false,
             error: error.response?.data?.details || 'Failed to fetch customers for salespersons',
+        };
+    }
+};
+export const getSalesOrder = async (customerNo, postingDateFrom, postingDateTo) => {
+    try {
+        let filterQuery = `sellToCustomerNo eq '${customerNo}' and documentType eq 'Order'`;
+
+        if (postingDateFrom && postingDateTo) {
+            filterQuery += ` and postingDate ge ${postingDateFrom} and postingDate le ${postingDateTo}`;
+        } else if (postingDateFrom) {
+            filterQuery += ` and postingDate ge ${postingDateFrom}`;
+        } else if (postingDateTo) {
+            filterQuery += ` and postingDate le ${postingDateTo}`;
+        }
+        let queryParams = `$filter=${filterQuery}`;
+
+        console.log('getSalesOrder URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerOrders?${queryParams}`);
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerOrders?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+        console.log("getSalesOrder response(BusinessCentralAPI.js):", response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value };
+        } else {
+            return { success: true, data: [] };
+        }
+    } catch (error) {
+        console.error('Error fetching sales orders(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error: error.response?.data?.details || 'Failed to fetch sales orders',
+        };
+    }
+};
+
+export const getSPSalesOrder = async (customersForSalesperson, postingDateFrom, postingDateTo) => {
+    console.log("Fetching sales orders for SP customers:", customersForSalesperson);
+
+    try {
+        const customerNos = customersForSalesperson.split('|').map(c => c.trim()).filter(Boolean);
+
+        if (customerNos.length === 0) {
+            return { success: false, error: 'No customer numbers provided' };
+        }
+
+        const customerFilter = customerNos.map(no => `sellToCustomerNo eq '${no}'`).join(' or ');
+
+        let filterQuery = `(${customerFilter}) and documentType eq 'Order'`;
+
+        if (postingDateFrom && postingDateTo) {
+            filterQuery += ` and postingDate ge ${postingDateFrom} and postingDate le ${postingDateTo}`;
+        } else if (postingDateFrom) {
+            filterQuery += ` and postingDate ge ${postingDateFrom}`;
+        } else if (postingDateTo) {
+            filterQuery += ` and postingDate le ${postingDateTo}`;
+        }
+
+        // let queryParams = `$filter=${filterQuery}`;
+        let queryParams = `$filter=${filterQuery}&$expand=salesperson`;
+
+
+        console.log(
+            'getSPSalesOrder URL:',
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerOrders?${queryParams}`
+        );
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerOrders?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log("getSPSalesOrder response(BusinessCentralAPI.js):", response);
+
+        if (response.data && response.data.value) {
+            return { success: true, data: response.data.value };
+        } else {
+            return { success: true, data: [] };
+        }
+    } catch (error) {
+        console.error('Error fetching SP sales orders(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error: error.response?.data?.details || 'Failed to fetch SP sales orders',
+        };
+    }
+};
+
+export const getSalesOrderFromDocNo = async (documentNo, documentType) => {
+    try {
+        if (!documentNo || !documentType) {
+            return { success: false, error: 'Document No and Document Type are required' };
+        }
+
+        const filterQuery = `no eq '${documentNo}' and documentType eq '${documentType}'`;
+        const queryParams = `$filter=${filterQuery}&$expand=customerOrdersLines,dispatchdetails`;
+        console.log('getSPSalesOrder URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerOrders?${queryParams}`);
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerOrders?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log("getSalesOrderFromDocNo response(BusinessCentralAPI.js):", response);
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value[0] };
+        } else {
+            return { success: false, error: 'Sales order not found' };
+        }
+    } catch (error) {
+        console.error('Error fetching sales order by document no:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || 'Failed to fetch sales order details',
+        };
+    }
+};
+
+export const getDispatchDetailsFromDocNo = async (documentNo) => {
+    try {
+        if (!documentNo) {
+            return { success: false, error: 'Document No is required' };
+        }
+
+        const filterQuery = `no eq '${documentNo}'`;
+        const queryParams = `$filter=${filterQuery}&$expand=dispatchDetailsLines`;
+        console.log('getDispatchDetailsFromDocNo URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/dispatchdetails?${queryParams}`);
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/dispatchdetails?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log('getDispatchDetailsFromDocNo response(BusinessCentralAPI.js):', response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value[0] };
+        } else {
+            return { success: false, error: 'Dispatch details not found' };
+        }
+    } catch (error) {
+        console.error('Error fetching dispatch details by document no:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || 'Failed to fetch dispatch details',
+        };
+    }
+};
+
+export const getSPPendingInvoiceAmount = async (salespersonCode) => {
+    try {
+        const codes = salespersonCode.split('|').map(c => c.trim()).filter(Boolean);
+        const codeFilter = codes.map(code => `salesperson_Code_Filter_FilterOnly eq '${code}'`).join(' or ');
+
+        const filterQuery = `(${codeFilter})`;
+        const queryParams = `$filter=${filterQuery}`;
+
+        console.log('getSPPendingInvoiceAmount:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/SPCustPendingInvoiceAmts?${queryParams}`);
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/SPCustPendingInvoiceAmts?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log('getSPPendingInvoiceAmount response(BusinessCentralAPI.js):', response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value[0] };
+        } else {
+            return { success: false, error: 'No pending invoice amount data found' };
+        }
+    } catch (error) {
+        console.error('Error fetching SP pending invoice amount(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error:
+                error.response?.data?.error?.message ||
+                error.response?.data?.details ||
+                'Failed to fetch SP pending invoice amount',
+        };
+    }
+};
+
+export const getPendingInvoiceAmount = async (customerNo) => {
+    try {
+        let filterQuery = `customer_No_Filter_FilterOnly eq '${customerNo}'`;
+        let queryParams = `$filter=${filterQuery}`;
+
+        console.log('Pending Invoice API URL:', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/CustPendingInvoiceAmts?${queryParams}`);
+
+        const response = await axios.get(
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/CustPendingInvoiceAmts?${queryParams}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+        console.log("Pending Invoice Amount response(BusinessCentralAPI.js):", response);
+
+        if (response.data && response.data.value && response.data.value.length > 0) {
+            return { success: true, data: response.data.value[0] };
+        } else {
+            return { success: false, error: 'No pending invoice amount data found' };
+        }
+    } catch (error) {
+        console.error('Error fetching pending invoice amount(BusinessCentralAPI.js):', error);
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.response?.data?.details || 'Failed to fetch pending invoice amount',
         };
     }
 };

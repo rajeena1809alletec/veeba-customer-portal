@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
@@ -10,169 +10,217 @@ import LineItemsTable from './components/LineItemsTable';
 import TrackingTimeline from './components/TrackingTimeline';
 import DocumentsSection from './components/DocumentsSection';
 import OrderSummaryCard from './components/OrderSummaryCard';
+import { getSalesOrderFromDocNo } from 'services/BusinessCentralAPI';
 
-const SPOrderDetails = () => {
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return 'Pending';
+
+  const date = new Date(dateTime);
+  if (isNaN(date.getTime())) return 'Pending';
+
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+const SPOrderDetails = ({ onClose, orderData: orderDataProp }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const documentNo = queryParams.get('documentNo');
+  const documentType = queryParams.get('documentType');
+
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
+
+  const handleOpenDispatchModal = () => {
+    if (orderData?.trackingData?.dispatchDetails?.length) {
+      setShowDispatchModal(true);
+    }
+  };
+
+  const handleCloseDispatchModal = () => {
+    setShowDispatchModal(false);
+  };
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setShowDispatchModal(false);
+      }
+    };
+
+    if (showDispatchModal) {
+      window.addEventListener('keydown', handleEsc);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [showDispatchModal]);
 
   const mockOrderData = {
     orderNumber: "SO-2026-00847",
     orderDate: "15/12/2025",
     status: "Dispatched",
     expectedDelivery: "20/01/2026",
-    shipToLocation: "Mumbai Warehouse",
+    shipToLocation: "",
     totalAmount: 245680.50,
     lineItems: [
-    {
-      id: 1,
-      productCode: "VB-MS-1KG",
-      productName: "Veeba Mayonnaise Eggless",
-      productImage: "https://images.unsplash.com/photo-1664478911514-36dacf3b876a",
-      productImageAlt: "White squeeze bottle of Veeba eggless mayonnaise with red and yellow branding on white background",
-      packSize: "1 Kg Bottle",
-      quantity: 50,
-      unit: "Bottles",
-      unitPrice: 185.00,
-      gstRate: 12
-    },
-    {
-      id: 2,
-      productCode: "VB-TC-500G",
-      productName: "Veeba Tomato Ketchup",
-      productImage: "https://images.unsplash.com/photo-1580342583488-e6b33ece69d7",
-      productImageAlt: "Red plastic bottle of tomato ketchup with Veeba branding label on wooden table surface",
-      packSize: "500g Bottle",
-      quantity: 100,
-      unit: "Bottles",
-      unitPrice: 95.00,
-      gstRate: 12
-    },
-    {
-      id: 3,
-      productCode: "VB-CS-1KG",
-      productName: "Veeba Chef\'s Special Sauce",
-      productImage: "https://images.unsplash.com/photo-1664478911600-5604555816a5",
-      productImageAlt: "Brown squeeze bottle of chef special sauce with Veeba logo and orange accent colors",
-      packSize: "1 Kg Bottle",
-      quantity: 75,
-      unit: "Bottles",
-      unitPrice: 225.00,
-      gstRate: 12
-    },
-    {
-      id: 4,
-      productCode: "VB-MS-5KG",
-      productName: "Veeba Mint Mayonnaise",
-      productImage: "https://img.rocket.new/generatedImages/rocket_gen_img_1dc50755d-1767763060710.png",
-      productImageAlt: "Large white container of mint flavored mayonnaise with green Veeba branding and fresh mint leaf imagery",
-      packSize: "5 Kg Jar",
-      quantity: 30,
-      unit: "Jars",
-      unitPrice: 850.00,
-      gstRate: 12
-    },
-    {
-      id: 5,
-      productCode: "VB-PS-1KG",
-      productName: "Veeba Pizza & Sandwich Sauce",
-      productImage: "https://images.unsplash.com/photo-1644083102317-446fe7231e8b",
-      productImageAlt: "Red squeeze bottle of pizza and sandwich sauce with Veeba branding and Italian food graphics",
-      packSize: "1 Kg Bottle",
-      quantity: 60,
-      unit: "Bottles",
-      unitPrice: 195.00,
-      gstRate: 12
-    }],
+      {
+        id: 1,
+        productCode: "VB-MS-1KG",
+        productName: "Veeba Mayonnaise Eggless",
+        productImage: "https://images.unsplash.com/photo-1664478911514-36dacf3b876a",
+        productImageAlt: "White squeeze bottle of Veeba eggless mayonnaise with red and yellow branding on white background",
+        packSize: "1 Kg Bottle",
+        quantity: 50,
+        unit: "Bottles",
+        unitPrice: 185.00,
+        gstRate: 12
+      },
+      {
+        id: 2,
+        productCode: "VB-TC-500G",
+        productName: "Veeba Tomato Ketchup",
+        productImage: "https://images.unsplash.com/photo-1580342583488-e6b33ece69d7",
+        productImageAlt: "Red plastic bottle of tomato ketchup with Veeba branding label on wooden table surface",
+        packSize: "500g Bottle",
+        quantity: 100,
+        unit: "Bottles",
+        unitPrice: 95.00,
+        gstRate: 12
+      },
+      {
+        id: 3,
+        productCode: "VB-CS-1KG",
+        productName: "Veeba Chef\'s Special Sauce",
+        productImage: "https://images.unsplash.com/photo-1664478911600-5604555816a5",
+        productImageAlt: "Brown squeeze bottle of chef special sauce with Veeba logo and orange accent colors",
+        packSize: "1 Kg Bottle",
+        quantity: 75,
+        unit: "Bottles",
+        unitPrice: 225.00,
+        gstRate: 12
+      },
+      {
+        id: 4,
+        productCode: "VB-MS-5KG",
+        productName: "Veeba Mint Mayonnaise",
+        productImage: "https://img.rocket.new/generatedImages/rocket_gen_img_1dc50755d-1767763060710.png",
+        productImageAlt: "Large white container of mint flavored mayonnaise with green Veeba branding and fresh mint leaf imagery",
+        packSize: "5 Kg Jar",
+        quantity: 30,
+        unit: "Jars",
+        unitPrice: 850.00,
+        gstRate: 12
+      },
+      {
+        id: 5,
+        productCode: "VB-PS-1KG",
+        productName: "Veeba Pizza & Sandwich Sauce",
+        productImage: "https://images.unsplash.com/photo-1644083102317-446fe7231e8b",
+        productImageAlt: "Red squeeze bottle of pizza and sandwich sauce with Veeba branding and Italian food graphics",
+        packSize: "1 Kg Bottle",
+        quantity: 60,
+        unit: "Bottles",
+        unitPrice: 195.00,
+        gstRate: 12
+      }],
 
     trackingData: {
       trackingNumber: "VB2026TRK847523",
       challanNumber: "DC-2026-001234",
       estimatedDelivery: "20/01/2026, 5:00 PM",
       timeline: [
-      {
-        status: "Confirmed",
-        timestamp: "15/12/2025, 10:30 AM",
-        description: "Order confirmed and payment verified",
-        location: "Veeba Foods - Delhi Plant",
-        completed: true,
-        current: false
-      },
-      {
-        status: "Processing",
-        timestamp: "16/12/2025, 2:15 PM",
-        description: "Order picked and packed for dispatch",
-        location: "Veeba Foods - Delhi Plant",
-        completed: true,
-        current: false
-      },
-      {
-        status: "Dispatched",
-        timestamp: "17/12/2025, 9:00 AM",
-        description: "Shipment dispatched via Blue Dart Express",
-        location: "Delhi Distribution Center",
-        remarks: "Vehicle No: DL-3C-AB-1234, Driver: Rajesh Kumar (+91-9876543210)",
-        completed: true,
-        current: true
-      },
-      {
-        status: "In Transit",
-        timestamp: "Pending",
-        description: "Package in transit to destination",
-        location: "Mumbai Hub",
-        completed: false,
-        current: false
-      },
-      {
-        status: "Out for Delivery",
-        timestamp: "Pending",
-        description: "Out for delivery to your location",
-        location: "Mumbai Warehouse",
-        completed: false,
-        current: false
-      },
-      {
-        status: "Delivered",
-        timestamp: "Pending",
-        description: "Package delivered successfully",
-        location: "Mumbai Warehouse",
-        completed: false,
-        current: false
-      }]
+        {
+          status: "Confirmed",
+          timestamp: "15/12/2025, 10:30 AM",
+          description: "Order confirmed and payment verified",
+          location: "",
+          completed: true,
+          current: false
+        },
+        {
+          status: "Processing",
+          timestamp: "16/12/2025, 2:15 PM",
+          description: "Order picked and packed for dispatch",
+          location: "",
+          completed: true,
+          current: false
+        },
+        {
+          status: "Dispatched",
+          timestamp: "17/12/2025, 9:00 AM",
+          description: "Shipment dispatched",
+          location: "",
+          remarks: "",
+          completed: true,
+          current: true
+        },
+        // {
+        //   status: "In Transit",
+        //   timestamp: "Pending",
+        //   description: "Package in transit to destination",
+        //   location: "Mumbai Hub",
+        //   completed: false,
+        //   current: false
+        // },
+        // {
+        //   status: "Out for Delivery",
+        //   timestamp: "Pending",
+        //   description: "Out for delivery to your location",
+        //   location: "Mumbai Warehouse",
+        //   completed: false,
+        //   current: false
+        // },
+        // {
+        //   status: "Delivered",
+        //   timestamp: "Pending",
+        //   description: "Package delivered successfully",
+        //   location: "Mumbai Warehouse",
+        //   completed: false,
+        //   current: false
+        // }
+      ]
 
     },
     documents: [
-    {
-      id: 1,
-      type: "Tax Invoice",
-      documentNumber: "INV-2026-00847",
-      date: "17/12/2025",
-      fileSize: 245680,
-      isNew: true
-    },
-    {
-      id: 2,
-      type: "Delivery Challan",
-      documentNumber: "DC-2026-001234",
-      date: "17/12/2025",
-      fileSize: 189340,
-      isNew: true
-    },
-    {
-      id: 3,
-      type: "Packing List",
-      documentNumber: "PL-2026-00847",
-      date: "16/12/2025",
-      fileSize: 156720,
-      isNew: false
-    },
-    {
-      id: 4,
-      type: "Invoice",
-      documentNumber: "SO-2026-00847",
-      date: "15/12/2025",
-      fileSize: 234560,
-      isNew: false
-    }],
+      {
+        id: 1,
+        type: "Tax Invoice",
+        documentNumber: "INV-2026-00847",
+        date: "17/12/2025",
+        fileSize: 245680,
+        isNew: true
+      },
+      // {
+      //   id: 2,
+      //   type: "Delivery Challan",
+      //   documentNumber: "DC-2026-001234",
+      //   date: "17/12/2025",
+      //   fileSize: 189340,
+      //   isNew: true
+      // },
+      // {
+      //   id: 3,
+      //   type: "Packing List",
+      //   documentNumber: "PL-2026-00847",
+      //   date: "16/12/2025",
+      //   fileSize: 156720,
+      //   isNew: false
+      // },
+      {
+        id: 2,
+        type: "Invoice",
+        documentNumber: "SO-2026-00847",
+        date: "15/12/2025",
+        fileSize: 234560,
+        isNew: false
+      }],
 
     summary: {
       customerName: "Mumbai Food Distributors Pvt Ltd",
@@ -185,19 +233,211 @@ const SPOrderDetails = () => {
       referenceNumber: "PO-MFD-2025-1234"
     }
   };
+  const [orderData, setOrderData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const [orderData] = useState(mockOrderData);
-  const [showComplaintModal, setShowComplaintModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      try {
+        setLoading(true);
+        setError('');
 
-  const handleRepeatOrder = () => {
-    navigate('/order-management', {
-      state: { repeatOrder: orderData?.lineItems }
-    });
+        if (!documentNo || !documentType) {
+          setError('Missing document number or document type');
+          setLoading(false);
+          return;
+        }
+
+        const result = await getSalesOrderFromDocNo(documentNo, documentType);
+
+        if (result.success) {
+          const entry = result.data;
+
+          // const mappedOrder = {
+          //   orderNumber: entry.no,
+          //   orderDate: entry.orderDate || entry.postingDate || '',
+          //   status: entry.status || '',
+          //   expectedDelivery: entry.requestedDeliveryDate || '',
+          //   shipToLocation: entry.shipToName || '',
+          //   totalAmount: entry.amount || 0,
+          //   lineItems: (entry.customerOrdersLines || []).map((line, index) => ({
+          //     id: line.lineNo || index + 1,
+          //     orderNo: line.documentNo || entry.no || '',
+          //     itemNo: line.no || '',
+          //     description: line.description || '',
+          //     uom: line.unitOfMeasure || '',
+          //     qty: line.quantity || 0,
+          //     unitPrice: line.unitPrice || 0,
+          //     gstRate: line.gstRate || 0,
+          //     invoicedQty: line.quantityInvoiced || 0,
+          //     outstandingQty: line.outstandingQuantity || 0,
+          //     lineNo: line.lineNo || 0,
+          //   })),
+          //   trackingData: null,
+          //   documents: [],
+          //   summary: {
+          //     customerName: entry.sellToCustomerName || '',
+          //     customerCode: entry.sellToCustomerNo || '',
+          //     gstNumber: '',
+          //     paymentTerms: '',
+          //     shippingAddress: entry.shipToAddress || '',
+          //     billingAddress: '',
+          //     specialInstructions: '',
+          //     referenceNumber: entry.externalDocumentNo || '',
+          //   }
+          // };
+          const apiOrder = {
+            orderNumber: entry.no || mockOrderData.orderNumber,
+            orderDate: entry.orderDate || entry.postingDate || mockOrderData.orderDate,
+            status: entry.status || mockOrderData.status,
+            expectedDelivery: entry.requestedDeliveryDate || mockOrderData.expectedDelivery,
+            shipToLocation: entry.shipToCity || '',
+            totalAmount: entry.amount || mockOrderData.totalAmount,
+            lineItems: (entry.customerOrdersLines || []).map((line, index) => ({
+              id: line.lineNo || index + 1,
+              orderNo: line.documentNo || entry.no || '',
+              itemNo: line.no || '',
+              description: line.description || '',
+              uom: line.unitOfMeasure || '',
+              qty: line.quantity || 0,
+              unitPrice: line.unitPrice || 0,
+              gstRate: line.gstPer || 0,
+              invoicedQty: line.quantityInvoiced || 0,
+              outstandingQty: line.outstandingQuantity || 0,
+              lineNo: line.lineNo || 0,
+            })),
+            summary: {
+              customerName: entry.sellToCustomerName || '',
+              customerCode: entry.sellToCustomerNo || '',
+              gstNumber: '',
+              paymentTerms: '',
+              shippingAddress: entry.shipToAddress || '',
+              billingAddress: '',
+              specialInstructions: '',
+              referenceNumber: entry.externalDocumentNo || '',
+            }
+          };
+
+          const mergedOrder = {
+            ...mockOrderData,
+            ...apiOrder,
+            lineItems: apiOrder.lineItems?.length ? apiOrder.lineItems : mockOrderData.lineItems,
+            trackingData: {
+              ...mockOrderData.trackingData,
+              trackingNumber: entry.packageTrackingNo || '',
+              challanNumber: '',
+              estimatedDelivery: apiOrder.expectedDelivery || mockOrderData.trackingData?.estimatedDelivery,
+              dispatchDetails: entry.dispatchdetails || [],
+              timeline: (mockOrderData.trackingData?.timeline || []).map((item) => {
+                if (item.status === 'Confirmed') {
+                  return {
+                    ...item, timestamp: formatDateTime(entry.systemCreatedAt),
+                  };
+                }
+                if (item.status === 'Dispatched') {
+                  const hasDispatch = (entry.dispatchdetails || []).length > 0;
+                  return {
+                    ...item, description: hasDispatch ? 'Shipment dispatched' : 'Shipment yet to be dispatched',
+                  };
+                }
+                return item;
+              }),
+            },
+            documents: mockOrderData.documents,
+            summary: {
+              ...mockOrderData.summary,
+              ...apiOrder.summary,
+            },
+          };
+
+          setOrderData(mergedOrder);
+
+          // setOrderData(mappedOrder);
+        } else {
+          setError(result.error || 'Failed to fetch order details');
+        }
+      } catch (err) {
+        console.error('Error loading order details:', err);
+        setError('Something went wrong while loading order details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [documentNo, documentType]);
+
+  const data = orderData;
+  // const [showComplaintModal, setShowComplaintModal] = useState(false);
+  // const [selectedItem, setSelectedItem] = useState(null);
+  // const isModal = !!onClose; // ✅ true when used as modal
+
+
+  // const handleRepeatOrder = () => {
+  //   navigate('/order-management', {
+  //     state: { repeatOrder: orderData?.lineItems }
+  //   });
+  // };
+
+  const handleDownloadExcel = () => {
+    const rows = orderData?.lineItems || [];
+
+    if (!rows.length) {
+      alert('No line items available to download.');
+      return;
+    }
+
+    const headers = [
+      'Order No.',
+      'Item No.',
+      'Description',
+      'UOM',
+      'Qty',
+      'Unit Price',
+      'GST Rate',
+      'Invoiced Qty',
+      'Outstanding Qty'
+    ];
+
+    const csvRows = rows.map((item) => [
+      item?.orderNo || '',
+      item?.itemNo || '',
+      item?.description || '',
+      item?.uom || '',
+      item?.qty ?? 0,
+      item?.unitPrice ?? 0,
+      item?.gstRate ?? 0,
+      item?.invoicedQty ?? 0,
+      item?.outstandingQty ?? 0
+    ]);
+
+    const escapeCsvValue = (value) => {
+      const stringValue = String(value ?? '');
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+
+    const csvContent = [
+      headers.map(escapeCsvValue).join(','),
+      ...csvRows.map((row) => row.map(escapeCsvValue).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.setAttribute('download', `${orderData?.orderNumber || 'order-lines'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   const handleRaiseComplaint = (item = null) => {
-    setSelectedItem(item);
     navigate('/complaint-management', {
       state: {
         orderNumber: orderData?.orderNumber,
@@ -233,46 +473,87 @@ const SPOrderDetails = () => {
     alert(`Opening ${doc?.type}: ${doc?.documentNumber} in new window`);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-16">
+          <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+            <div className="flex items-center justify-center min-h-[300px]">
+              <div className="text-center">
+                <Icon name="Loader2" size={40} className="animate-spin text-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading order details...</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !orderData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-16">
+          <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+            <div className="bg-card rounded-xl p-8 border border-border text-center">
+              <h2 className="font-heading font-semibold text-xl text-foreground mb-2">
+                Unable to load order details
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                {error || 'Order details not found'}
+              </p>
+              <Button variant="default" onClick={() => navigate(-1)}>
+                Go Back
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <>
       <Helmet>
-        <title>Order Details - {orderData?.orderNumber} | Veeba Foods Customer Portal</title>
-        <meta name="description" content={`View detailed information for order ${orderData?.orderNumber} including line items, tracking, and documents`} />
+        <title>Order Details - {data?.orderNumber} | Veeba Foods Customer Portal</title>
+        <meta name="description" content={`View detailed information for order ${data?.orderNumber} including line items, tracking, and documents`} />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Header />
-        
+
         <main className="pt-16">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+          <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
             <Breadcrumb />
 
             <div className="space-y-6 md:space-y-8">
               <OrderHeader
-                order={orderData}
-                onRepeatOrder={handleRepeatOrder}
+                order={data}
+                onDownloadExcel={handleDownloadExcel}
                 onRaiseComplaint={() => handleRaiseComplaint()}
                 onShare={handleShare}
-                onPrint={handlePrint} />
+                onPrint={handlePrint}
+              />
 
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                <div className="lg:col-span-2 space-y-6 md:space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+                <div className="lg:col-span-9 space-y-6 md:space-y-8">
                   <LineItemsTable
-                    lineItems={orderData?.lineItems}
+                    lineItems={data?.lineItems}
                     onRaiseComplaint={handleRaiseComplaint} />
 
 
-                  <TrackingTimeline trackingData={orderData?.trackingData} />
+                  <TrackingTimeline trackingData={data?.trackingData} onDispatchedClick={handleOpenDispatchModal} />
 
-                  <DocumentsSection
-                    documents={orderData?.documents}
+                  {/* <DocumentsSection
+                    documents={mockOrderData?.documents}
                     onDownload={handleDownloadDocument}
-                    onView={handleViewDocument} />
+                    onView={handleViewDocument} /> */}
 
                 </div>
 
-                <div className="space-y-6">
-                  <OrderSummaryCard summary={orderData?.summary} />
+                <div className="lg:col-span-3 space-y-6">
+                  <OrderSummaryCard summary={data?.summary} />
 
                   <div className="bg-card rounded-xl p-4 md:p-6 shadow-warm-md border border-border">
                     <h3 className="text-lg font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -327,16 +608,99 @@ const SPOrderDetails = () => {
           </div>
         </main>
       </div>
-      <style jsx>{`
-        @media print {
-          header, nav, button, .no-print {
-            display: none !important;
-          }
-          main {
-            padding-top: 0 !important;
-          }
-        }
-      `}</style>
+      {showDispatchModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={handleCloseDispatchModal}
+        >
+          <div
+            className="bg-card w-full max-w-4xl rounded-xl border border-border shadow-warm-lg max-h-[85vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-border">
+              <div>
+                <h2 className="text-lg md:text-xl font-heading font-semibold text-foreground">
+                  Dispatch Details
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Details for dispatched shipment records
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCloseDispatchModal}
+                className="p-2 rounded-md hover:bg-muted transition-smooth"
+                aria-label="Close dispatch details modal"
+              >
+                <Icon name="X" size={20} />
+              </button>
+            </div>
+
+            <div className="p-4 md:p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
+              {data?.trackingData?.dispatchDetails?.length ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {data.trackingData.dispatchDetails.map((dispatch, index) => (
+                    <div
+                      key={dispatch?.no || index}
+                      className="bg-background rounded-xl border border-border p-4 md:p-5 shadow-warm-md"
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground font-caption mb-1">
+                            Dispatch Doc No.
+                          </p>
+                          <p className="text-base font-semibold text-foreground font-mono break-all">
+                            {dispatch?.no || '-'}
+                          </p>
+                        </div>
+
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Icon name="Truck" size={18} color="var(--color-primary)" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground font-caption mb-1">
+                            LR / RR No.
+                          </p>
+                          <p className="text-sm md:text-base text-foreground font-body">
+                            {dispatch?.lrRRNo || '-'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground font-caption mb-1">
+                            Transporter Vendor No.
+                          </p>
+                          <p className="text-sm md:text-base text-foreground font-body">
+                            {dispatch?.transporterVendorNo || '-'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">No dispatch details available.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      <style>{`
+  @media print {
+    header, nav, button, .no-print {
+      display: none !important;
+    }
+    main {
+      padding-top: 0 !important;
+    }
+  }
+`}</style>
     </>);
 
 };

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import Breadcrumb from '../../components/ui/Breadcrumb';
@@ -9,6 +9,67 @@ import OrderSummaryPanel from './components/OrderSummaryPanel';
 import OrderTable from './components/OrderTable';
 import OrderMobileCard from './components/OrderMobileCard';
 import BulkActionsBar from './components/BulkActionsBar';
+import { useNavigate } from 'react-router-dom';
+import { getSalesOrder } from 'services/BusinessCentralAPI';
+import CustomDateRangeModal from './components/CustomDateRangeModal';
+
+
+const mapStatus = (bcStatus, clBlock) => {
+  if (clBlock === true) return 'blocked';
+
+  const s = (bcStatus || '').toLowerCase().replace(/_x0020_/g, ' ').trim();
+
+  if (s === 'released') return 'open';
+  if (s === 'open') return 'open';
+  if (s === 'pending approval') return 'pending approval';
+  if (s === 'pending prepayment') return 'pending prepayment';
+
+  return 'open';
+};
+
+const getCurrentMonthDateRange = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  const firstDayTemp = new Date(2024, 5, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+
+  const formatDate = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  return {
+    startDate: formatDate(firstDay),
+    endDate: formatDate(lastDay)
+  };
+};
+const getCurrentFinancialYearDateRange = () => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+
+  let startYear;
+  let endYear;
+
+  if (currentMonth >= 4) {
+    startYear = currentYear;
+    endYear = currentYear + 1;
+  } else {
+    startYear = currentYear - 1;
+    endYear = currentYear;
+  }
+
+  return {
+    startDate: `${startYear}-04-01`,
+    endDate: `${endYear}-03-31`
+  };
+};
 
 const OrderManagement = () => {
   const [filters, setFilters] = useState({
@@ -26,6 +87,13 @@ const OrderManagement = () => {
 
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [showMobileView, setShowMobileView] = useState(window.innerWidth < 1024);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [allOrders, setAllOrders] = useState([]);
+  const [showCustomDateModal, setShowCustomDateModal] = useState(false);
+  const [customDateRange, setCustomDateRange] = useState({ start: null, end: null });
+  const [filteredOrders, setFilteredOrders] = useState([]);
+
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -34,6 +102,53 @@ const OrderManagement = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const customerId = localStorage.getItem('customerId');
+
+        if (!customerId) {
+          console.error('Customer ID not found');
+          navigate('/login');
+          return;
+        }
+
+        const { startDate, endDate } = getCurrentFinancialYearDateRange();
+        // console.log('Fetching orders for month:', startDate, 'to', endDate);
+        const result = await getSalesOrder(customerId, startDate, endDate);
+
+        if (result.success) {
+          const mapped = result.data.map((entry) => ({
+            id: entry.no,
+            orderNumber: entry.no,
+            orderDate: entry.postingDate || '-',
+            totalAmount: entry.amount || 0,
+            status: mapStatus(entry.status, entry.clBlock),
+            bcStatus: entry.status || '',
+            deliveryDate: entry.requestedDeliveryDate || '-',
+            documentType: entry.documentType,
+            postingDate: entry.postingDate || '-',
+            items: [],
+            trackingInfo: null,
+          }));
+
+          setAllOrders(mapped);
+        } else {
+          console.error('Failed to fetch sales orders:', result.error);
+          setAllOrders([]);
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        setAllOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [navigate]);
 
   const mockOrders = [
     {
@@ -207,52 +322,150 @@ const OrderManagement = () => {
     }
   ];
 
-  const filteredOrders = useMemo(() => {
-    let filtered = [...mockOrders];
+  useEffect(() => {
+    let filtered = [...allOrders];
 
     if (filters?.search) {
-      filtered = filtered?.filter(order =>
+      filtered = filtered.filter(order =>
         order?.orderNumber?.toLowerCase()?.includes(filters?.search?.toLowerCase())
       );
     }
 
     if (filters?.status !== 'all') {
-      filtered = filtered?.filter(order => order?.status === filters?.status);
+      filtered = filtered.filter(order => order?.status === filters?.status);
     }
 
-    filtered?.sort((a, b) => {
-      const aValue = a?.[sortConfig?.field];
-      const bValue = b?.[sortConfig?.field];
+    if (filters?.dateRange !== 'all') {
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth();
+      let startDate;
+      let endDate = new Date();
+
+      switch (filters?.dateRange) {
+        case 'today':
+          startDate = new Date(today);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(today);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+
+        case 'week':
+          startDate = new Date(today);
+          startDate.setDate(today.getDate() - today.getDay());
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+
+        case 'month':
+          startDate = new Date(currentYear, currentMonth, 1);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(currentYear, currentMonth + 1, 0);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+
+        case 'quarter':
+          const currentQuarter = Math.floor(currentMonth / 3);
+          startDate = new Date(currentYear, currentQuarter * 3, 1);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(currentYear, currentQuarter * 3 + 3, 0);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+
+        case 'year':
+          startDate = new Date(currentYear, 0, 1);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(currentYear, 11, 31);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+
+        case 'custom':
+          if (customDateRange.start && customDateRange.end) {
+            startDate = new Date(customDateRange.start);
+            startDate.setHours(0, 0, 0, 0);
+            endDate = new Date(customDateRange.end);
+            endDate.setHours(23, 59, 59, 999);
+          } else {
+            startDate = new Date(0);
+            endDate = new Date();
+            endDate.setHours(23, 59, 59, 999);
+          }
+          break;
+
+        default:
+          startDate = new Date(0);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+      }
+
+      // filtered = filtered.filter(t => {
+      //   const d = new Date(t.orderDate);
+      //   return d >= startDate && d <= endDate;
+      // });
+      filtered = filtered.filter(t => {
+        if (!t.orderDate) return false;
+        const d = new Date(t.orderDate);
+        return !isNaN(d.getTime()) && d >= startDate && d <= endDate;
+      });
+    }
+
+    // Apply sort
+    filtered.sort((a, b) => {
+      const aVal = a?.[sortConfig?.field];
+      const bVal = b?.[sortConfig?.field];
 
       if (sortConfig?.field === 'orderDate' || sortConfig?.field === 'deliveryDate') {
-        const aDate = new Date(aValue.split('/').reverse().join('-'));
-        const bDate = new Date(bValue.split('/').reverse().join('-'));
+        const aDate = aVal ? new Date(aVal).getTime() : 0;
+        const bDate = bVal ? new Date(bVal).getTime() : 0;
         return sortConfig?.direction === 'asc' ? aDate - bDate : bDate - aDate;
       }
-
-      if (typeof aValue === 'number') {
-        return sortConfig?.direction === 'asc' ? aValue - bValue : bValue - aValue;
+      if (typeof aVal === 'number') {
+        return sortConfig?.direction === 'asc' ? aVal - bVal : bVal - aVal;
       }
-
       return sortConfig?.direction === 'asc'
-        ? String(aValue)?.localeCompare(String(bValue))
-        : String(bValue)?.localeCompare(String(aValue));
+        ? String(aVal)?.localeCompare(String(bVal))
+        : String(bVal)?.localeCompare(String(aVal));
     });
 
-    return filtered;
-  }, [filters, sortConfig]);
+    setFilteredOrders(filtered);
+  }, [filters, sortConfig, allOrders, customDateRange]);
 
-  const orderSummary = useMemo(() => {
-    return {
-      totalOrders: mockOrders?.length,
-      openOrders: mockOrders?.filter(o => o?.status === 'open')?.length,
-      dispatchedOrders: mockOrders?.filter(o => o?.status === 'dispatched')?.length,
-      totalValue: mockOrders?.reduce((sum, order) => sum + order?.totalAmount, 0)
-    };
-  }, []);
+  const orderSummary = {
+    totalOrders: allOrders?.length || 0,
+    totalOrdersAmount: allOrders?.reduce((sum, order) => sum + (order?.totalAmount || 0), 0) || 0,
+
+    openOrders: allOrders?.filter(o => o?.status === 'open')?.length || 0,
+    openOrdersAmount: allOrders
+      ?.filter(o => o?.status === 'open')
+      ?.reduce((sum, order) => sum + (order?.totalAmount || 0), 0) || 0,
+
+    blockedOrders: allOrders?.filter(o => o?.status === 'blocked')?.length || 0,
+    blockedOrdersAmount: allOrders
+      ?.filter(o => o?.status === 'blocked')
+      ?.reduce((sum, order) => sum + (order?.totalAmount || 0), 0) || 0,
+
+    dispatchedOrders: allOrders?.filter(o => o?.status === 'dispatched')?.length || 0,
+    dispatchedOrdersAmount: allOrders
+      ?.filter(o => o?.status === 'dispatched')
+      ?.reduce((sum, order) => sum + (order?.totalAmount || 0), 0) || 0,
+
+    totalValue: allOrders?.reduce((sum, order) => sum + (order?.totalAmount || 0), 0) || 0
+  };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    if (key === 'dateRange' && value === 'custom') {
+      setShowCustomDateModal(true);
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value }));
+      if (key === 'dateRange') {
+        setCustomDateRange({ start: null, end: null });
+      }
+    }
+  };
+
+  const handleCustomDateApply = (startDate, endDate) => {
+    setCustomDateRange({ start: startDate, end: endDate });
+    setFilters(prev => ({ ...prev, dateRange: 'custom' }));
   };
 
   const handleClearFilters = () => {
@@ -263,6 +476,7 @@ const OrderManagement = () => {
       startDate: '',
       endDate: ''
     });
+    setCustomDateRange({ start: null, end: null });
   };
 
   const handleSort = (field, direction) => {
@@ -280,6 +494,67 @@ const OrderManagement = () => {
   const handleClearSelection = () => {
     setSelectedOrders([]);
   };
+  const handleDownloadAllEntries = () => {
+    if (!filteredOrders || filteredOrders.length === 0) {
+      alert('No orders to download.');
+      return;
+    }
+
+    const headers = [
+      'Order Number',
+      'Order Date',
+      'Delivery Date',
+      'Status',
+      'BC Status',
+      'Total Amount',
+      'Document Type'
+    ];
+
+    const rows = filteredOrders.map(order => [
+      order?.orderNumber || '',
+      order?.orderDate || '',
+      order?.deliveryDate || '',
+      order?.status || '',
+      order?.bcStatus || '',
+      order?.totalAmount !== undefined ? Number(order.totalAmount).toFixed(2) : '0.00',
+      order?.documentType || ''
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `customer-orders-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Helmet><title>Order Management - Veeba Foods Customer Portal</title></Helmet>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <main className="pt-16">
+            <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                  <Icon name="Loader2" size={48} className="animate-spin text-primary mx-auto mb-4" />
+                  <p className="text-muted-foreground">Loading orders...</p>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -310,18 +585,9 @@ const OrderManagement = () => {
                   size="default"
                   iconName="Download"
                   iconPosition="left"
-                  onClick={() => alert('Export all orders functionality')}
+                  onClick={handleDownloadAllEntries}
                 >
-                  Export All
-                </Button>
-                <Button
-                  variant="default"
-                  size="default"
-                  iconName="Plus"
-                  iconPosition="left"
-                  onClick={() => alert('New order functionality will be implemented')}
-                >
-                  New Order
+                  Download All Entries
                 </Button>
               </div>
             </div>
@@ -333,7 +599,7 @@ const OrderManagement = () => {
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 onClearFilters={handleClearFilters}
-                resultsCount={filteredOrders?.length}
+                resultsCount={filteredOrders?.length} customDateRange={customDateRange}
               />
 
               {showMobileView ? (
@@ -355,7 +621,7 @@ const OrderManagement = () => {
                 />
               )}
 
-              {filteredOrders?.length === 0 && (
+              {/* {filteredOrders?.length === 0 && (
                 <div className="bg-card rounded-xl p-12 text-center shadow-warm-sm border border-border">
                   <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                     <Icon name="ShoppingCart" size={40} color="var(--color-muted-foreground)" />
@@ -376,7 +642,7 @@ const OrderManagement = () => {
                     Create New Order
                   </Button>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </main>
@@ -387,6 +653,13 @@ const OrderManagement = () => {
           onClearSelection={handleClearSelection}
         />
       </div>
+      {showCustomDateModal && (
+        <CustomDateRangeModal
+          isOpen={showCustomDateModal}
+          onClose={() => setShowCustomDateModal(false)}
+          onApply={handleCustomDateApply}
+        />
+      )}
     </>
   );
 };

@@ -5,31 +5,39 @@ import Icon from '../AppIcon';
 
 const QuickActionsPanel = () => {
   const navigate = useNavigate();
+  const role = localStorage.getItem('role')?.toLowerCase();
+  // console.log('roleeee: ', role)
+
+  const invoiceRoute =
+    role === 'salesperson' ? '/sp-invoice-management' : '/invoice-management';
+
+  const complaintRoute =
+    role === 'salesperson' ? '/sp-complaint-management' : '/complaint-management';
 
   const quickActions = [
-    {
-      title: 'New Order',
-      description: 'Place a new order quickly',
-      icon: 'Plus',
-      iconColor: 'var(--color-primary)',
-      bgColor: 'bg-primary/10',
-      action: () => navigate('/order-management'),
-    },
-    {
-      title: 'Repeat Order',
-      description: 'Reorder from previous purchases',
-      icon: 'RefreshCw',
-      iconColor: 'var(--color-accent)',
-      bgColor: 'bg-accent/10',
-      action: () => navigate('/order-management'),
-    },
+    // {
+    //   title: 'New Order',
+    //   description: 'Place a new order quickly',
+    //   icon: 'Plus',
+    //   iconColor: 'var(--color-primary)',
+    //   bgColor: 'bg-primary/10',
+    //   action: () => navigate('/order-management'),
+    // },
+    // {
+    //   title: 'Repeat Order',
+    //   description: 'Reorder from previous purchases',
+    //   icon: 'RefreshCw',
+    //   iconColor: 'var(--color-accent)',
+    //   bgColor: 'bg-accent/10',
+    //   action: () => navigate('/order-management'),
+    // },
     {
       title: 'View Invoices',
       description: 'Check pending invoices',
       icon: 'FileText',
       iconColor: 'var(--color-warning)',
       bgColor: 'bg-warning/10',
-      action: () => navigate('/invoice-management'),
+      action: () => navigate(invoiceRoute),
     },
     {
       title: 'Raise Complaint',
@@ -37,7 +45,7 @@ const QuickActionsPanel = () => {
       icon: 'MessageSquare',
       iconColor: 'var(--color-error)',
       bgColor: 'bg-error/10',
-      action: () => navigate('/complaint-management'),
+      action: () => navigate(complaintRoute),
     },
   ];
 

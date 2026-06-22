@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 
-const TrackingTimeline = ({ trackingData }) => {
+const TrackingTimeline = ({ trackingData, onDispatchedClick }) => {
   const getStatusIcon = (status) => {
     const icons = {
       'Confirmed': 'CheckCircle2',
@@ -48,6 +48,7 @@ const TrackingTimeline = ({ trackingData }) => {
       )}
       <div className="relative">
         {trackingData?.timeline?.map((event, index) => {
+          const isDispatchedClickable = event?.status === 'Dispatched' && trackingData?.dispatchDetails?.length > 0;
           const isLast = index === trackingData?.timeline?.length - 1;
           const isCompleted = event?.completed;
           const isCurrent = event?.current;
@@ -64,7 +65,7 @@ const TrackingTimeline = ({ trackingData }) => {
                   }}
                 />
               )}
-              <div className="flex gap-4 md:gap-6">
+              <div className={`flex gap-4 md:gap-6 ${isDispatchedClickable ? 'rounded-lg transition-smooth hover:bg-primary/5 p-2 -m-2' : ''}`}>
                 <div
                   className={`
                     flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full
@@ -82,14 +83,22 @@ const TrackingTimeline = ({ trackingData }) => {
 
                 <div className="flex-1 min-w-0 pt-1">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-                    <h3
-                      className={`
-                        font-body font-semibold text-base md:text-lg
-                        ${isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground'}
-                      `}
-                    >
-                      {event?.status}
-                    </h3>
+                    {isDispatchedClickable ? (
+                      <button
+                        type="button"
+                        onClick={onDispatchedClick}
+                        className="inline-flex items-center gap-2 text-left font-body font-semibold text-base md:text-lg text-primary hover:underline focus:outline-none"
+                      >
+                        <span>{event?.status}</span>
+                        <Icon name="ExternalLink" size={16} color="var(--color-primary)" />
+                      </button>
+                    ) : (
+                      <h3 className={`font-body font-semibold text-base md:text-lg ${isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}
+                      >
+                        {event?.status}
+                      </h3>
+                    )}
+
                     <span className="text-sm text-muted-foreground font-caption whitespace-nowrap">
                       {event?.timestamp}
                     </span>
@@ -119,7 +128,7 @@ const TrackingTimeline = ({ trackingData }) => {
           );
         })}
       </div>
-      {trackingData?.estimatedDelivery && (
+      {/* {trackingData?.estimatedDelivery && (
         <div className="mt-6 p-4 bg-accent/5 rounded-lg border border-accent/20">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -133,7 +142,7 @@ const TrackingTimeline = ({ trackingData }) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

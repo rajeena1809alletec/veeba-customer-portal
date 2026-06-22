@@ -17,6 +17,29 @@ import { getSPDispatchDetails } from 'services/BusinessCentralAPI';
 import CustomDateRangeModal from './components/CustomDateRangeModal';
 
 
+const getCurrentFinancialYearDateRange = () => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+
+  let startYear;
+  let endYear;
+
+  if (currentMonth >= 4) {
+    startYear = currentYear;
+    endYear = currentYear + 1;
+  } else {
+    startYear = currentYear - 1;
+    endYear = currentYear;
+  }
+
+  return {
+    startDate: `${startYear}-04-01`,
+    endDate: `${endYear}-03-31`
+  };
+};
+
+
 const getCurrentMonthDateRange = () => {
   const now = new Date();
   const year = now.getFullYear();
@@ -180,12 +203,12 @@ const SPDispatchDetails = () => {
         }
 
 
-        const { startDate, endDate } = getCurrentMonthDateRange();
+        const { startDate, endDate } = getCurrentFinancialYearDateRange();
         const today = getTodayDate();
         console.log('Fetching customer data for month:', startDate, 'to', endDate);
 
 
-        const dispatchResult = await getSPDispatchDetails(customersForSalesperson);
+        const dispatchResult = await getSPDispatchDetails(customersForSalesperson, startDate, endDate);
 
         if (dispatchResult.success) {
           const mapped = dispatchResult.data.map((entry) => ({
@@ -197,7 +220,9 @@ const SPDispatchDetails = () => {
             transporterName: entry.transporterVendorNo || '',
             driverContact: entry.driverMobNo || '',           // not in API yet
             customerNo: entry.sellToCustomerNo,
-            salespersonCode: entry.salespersonCode
+            salespersonCode: entry.salespersonCode,
+            driverName: entry.driverName || '',
+            salespersonName: entry.salesperson?.[0]?.name || '',
           }));
 
           setAllTransactions(mapped);
@@ -232,7 +257,9 @@ const SPDispatchDetails = () => {
         t?.lrNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.transporterName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.customerNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.salespersonCode?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+        t?.salespersonCode?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.driverName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.salespersonName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
       );
     }
 
@@ -335,31 +362,45 @@ const SPDispatchDetails = () => {
   };
   const handleDownloadAllEntries = () => {
     if (!filteredTransactions || filteredTransactions.length === 0) {
-      alert('No transactions to download.');
+      alert('No dispatch entries to download.');
       return;
     }
 
-    const headers = ['Type', 'Date', 'Reference', 'Amount', 'Remaining Amount', 'Status', 'Due Date'];
+    const headers = [
+      'Invoice No',
+      'Invoice Date',
+      'Dispatch Date',
+      'LR No',
+      'Transporter Name',
+      'Driver Contact',
+      'Customer No',
+      'Salesperson Code',
+      'Salesperson Name',
+      'Driver Name'
+    ];
 
     const rows = filteredTransactions.map(t => [
-      t.type || '',
-      t.date || '',
-      t.reference || '',
-      t.amount?.toFixed(2) || '0.00',
-      t.remainingAmtLCY !== undefined ? Math.abs(t.remainingAmtLCY).toFixed(2) : '0.00',
-      t.status || '',
-      t.dueDate || ''
+      t.invoiceNo || '',
+      t.invoiceDate || '',
+      t.dispatchDate || '',
+      t.lrNo || '',
+      t.transporterName || '',
+      t.driverContact || '',
+      t.customerNo || '',
+      t.salespersonCode || '',
+      t.salespersonName || '',
+      t.driverName || ''
     ]);
 
     const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `dispatch_entries_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -440,6 +481,15 @@ const SPDispatchDetails = () => {
                     <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground">
                       All Dispatch Details
                     </h2>
+
+                    <Button
+                      variant="outline"
+                      iconName="Download"
+                      iconPosition="left"
+                      onClick={handleDownloadAllEntries}
+                    >
+                      Download All Entries
+                    </Button>
                   </div>
                   <DispatchFilters
                     searchTerm={searchTerm}

@@ -5,18 +5,26 @@ import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
 
 const InvoiceFilters = ({ filters, onFilterChange, onReset, onApply }) => {
-  const statusOptions = [
-    { value: 'all', label: 'All Status' },
-    { value: 'paid', label: 'Paid' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'overdue', label: 'Overdue' },
-    { value: 'partially_paid', label: 'Partially Paid' }
-  ];
+  // const statusOptions = [
+  //   { value: 'all', label: 'All Status' },
+  //   { value: 'paid', label: 'Paid' },
+  //   { value: 'pending', label: 'Pending' },
+  //   { value: 'overdue', label: 'Overdue' },
+  //   { value: 'partially_paid', label: 'Partially Paid' }
+  // ];
 
-  const typeOptions = [
-    { value: 'all', label: 'All Types' },
-    { value: 'invoice', label: 'Invoice' },
-    { value: 'credit_note', label: 'Credit Note' }
+  // const typeOptions = [
+  //   { value: 'all', label: 'All Types' },
+  //   { value: 'invoice', label: 'Invoice' },
+  //   { value: 'credit_note', label: 'Credit Note' }
+  // ];
+  const dateRangeOptions = [
+    { value: 'all', label: 'All Time' },
+    { value: 'today', label: 'Today' },
+    { value: 'week', label: 'This Week' },
+    { value: 'month', label: 'This Month' },
+    { value: 'quarter', label: 'This Quarter' },
+    { value: 'year', label: 'This Year' }
   ];
 
   return (
@@ -48,8 +56,14 @@ const InvoiceFilters = ({ filters, onFilterChange, onReset, onApply }) => {
           value={filters?.search}
           onChange={(e) => onFilterChange('search', e?.target?.value)}
         />
-
         <Select
+          label="Time"
+          options={dateRangeOptions}
+          value={filters?.dateRange}
+          onChange={(value) => onFilterChange('dateRange', value)}
+        />
+
+        {/* <Select
           label="Status"
           options={statusOptions}
           value={filters?.status}
@@ -61,17 +75,17 @@ const InvoiceFilters = ({ filters, onFilterChange, onReset, onApply }) => {
           options={typeOptions}
           value={filters?.type}
           onChange={(value) => onFilterChange('type', value)}
-        />
+        /> */}
 
-        <Input
+        {/* <Input
           type="date"
           label="From Date"
           value={filters?.fromDate}
           onChange={(e) => onFilterChange('fromDate', e?.target?.value)}
-        />
+        /> */}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Input
+        {/* <Input
           type="date"
           label="To Date"
           value={filters?.toDate}
@@ -92,9 +106,9 @@ const InvoiceFilters = ({ filters, onFilterChange, onReset, onApply }) => {
           placeholder="100000"
           value={filters?.maxAmount}
           onChange={(e) => onFilterChange('maxAmount', e?.target?.value)}
-        />
+        /> */}
 
-        <div className="flex items-end">
+        {/* <div className="flex items-end">
           <Button
             variant="default"
             fullWidth
@@ -104,7 +118,7 @@ const InvoiceFilters = ({ filters, onFilterChange, onReset, onApply }) => {
           >
             Apply Filters
           </Button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
