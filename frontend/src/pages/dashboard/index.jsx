@@ -194,7 +194,7 @@ const Dashboard = () => {
                 bgColor: "bg-primary/10",
                 trend: "down",
                 trendValue: "2 less than yesterday",
-                navigateTo: "/order-management",
+                navigateTo: "/invoice-management",
               },
               {
                 id: 4,
@@ -206,7 +206,7 @@ const Dashboard = () => {
                 bgColor: "bg-primary/10",
                 trend: "up",
                 trendValue: "FY cumulative",
-                navigateTo: "/order-management",
+                navigateTo: "/invoice-management",
               },
               {
                 id: 5,

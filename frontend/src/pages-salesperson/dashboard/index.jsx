@@ -249,7 +249,7 @@ const SPDashboard = () => {
                 bgColor: "bg-primary/10",
                 trend: "down",
                 trendValue: "2 less than yesterday",
-                navigateTo: "/sp-order-management",
+                navigateTo: "/sp-invoice-management",
               },
               {
                 id: 4,
@@ -261,7 +261,7 @@ const SPDashboard = () => {
                 bgColor: "bg-primary/10",
                 trend: "up",
                 trendValue: "FY cumulative",
-                navigateTo: "/sp-order-management",
+                navigateTo: "/sp-invoice-management",
               },
               {
                 id: 5,
