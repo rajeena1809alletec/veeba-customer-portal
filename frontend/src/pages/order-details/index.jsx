@@ -147,7 +147,7 @@ const OrderDetails = ({ onClose, orderData: orderDataProp }) => {
         },
         {
           status: "Processing",
-          timestamp: "16/12/2025, 2:15 PM",
+          timestamp: "",
           description: "Order picked and packed for dispatch",
           location: "",
           completed: true,
@@ -155,7 +155,7 @@ const OrderDetails = ({ onClose, orderData: orderDataProp }) => {
         },
         {
           status: "Dispatched",
-          timestamp: "17/12/2025, 9:00 AM",
+          timestamp: "",
           description: "Shipment dispatched",
           location: "",
           remarks: "",

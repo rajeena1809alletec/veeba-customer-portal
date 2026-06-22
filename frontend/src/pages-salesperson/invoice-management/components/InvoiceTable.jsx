@@ -85,7 +85,7 @@ const InvoiceTable = ({ invoices }) => {
           salespersonCode: header.salespersonCode || '',
           type: invoice?.type || 'invoice',
           status: invoice?.status || 'pending',
-          salespersonCode: header.salespersonCode || '',
+          // salespersonCode: header.salespersonCode || '',
           salespersonName: header.salesperson?.[0]?.name || '',
           lines: (header.dispatchDetailsLines || []).map(line => ({
             documentNo: line.documentNo || '',
