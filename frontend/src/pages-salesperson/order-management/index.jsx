@@ -173,7 +173,8 @@ const SPOrderManagement = () => {
             orderDate: entry.postingDate || '',
             totalAmount: entry.amount || 0,
             status: mapStatus(entry.status, entry.clBlock),
-            bcStatus: entry.status || '',
+            bcStatus: (entry.status || '').toLowerCase().replace(/_x0020_/g, ' ').trim(),
+            clBlock: entry.clBlock === true,
             deliveryDate: entry.requestedDeliveryDate || '',
             documentType: entry.documentType,
             postingDate: entry.postingDate || '',
@@ -183,8 +184,12 @@ const SPOrderManagement = () => {
             salespersonCode: entry.salespersonCode || '',
             salespersonName: entry.salesperson?.[0]?.name || ''
           }));
+          const filteredMapped = mapped.filter(
+            order => !(order.bcStatus?.toLowerCase() === 'open' && order.clBlock === false)
+          );
 
-          setAllOrders(mapped);
+          setAllOrders(filteredMapped);
+          // setAllOrders(mapped);
         } else {
           console.error('One or more sales order batch calls failed:', failedOrderResult?.error);
           setAllOrders([]);

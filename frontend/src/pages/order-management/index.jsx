@@ -126,15 +126,20 @@ const OrderManagement = () => {
             orderDate: entry.postingDate || '-',
             totalAmount: entry.amount || 0,
             status: mapStatus(entry.status, entry.clBlock),
-            bcStatus: entry.status || '',
+            bcStatus: (entry.status || '').toLowerCase().replace(/_x0020_/g, ' ').trim(),
+            clBlock: entry.clBlock === true,
             deliveryDate: entry.requestedDeliveryDate || '-',
             documentType: entry.documentType,
             postingDate: entry.postingDate || '-',
             items: [],
             trackingInfo: null,
           }));
+          const filteredMapped = mapped.filter(
+            order => !(order.bcStatus?.toLowerCase() === 'open' && order.clBlock === false)
+          );
 
-          setAllOrders(mapped);
+          setAllOrders(filteredMapped);
+          // setAllOrders(mapped);
         } else {
           console.error('Failed to fetch sales orders:', result.error);
           setAllOrders([]);
