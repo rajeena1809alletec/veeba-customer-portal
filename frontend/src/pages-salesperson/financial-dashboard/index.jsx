@@ -16,6 +16,27 @@ import { getCustomersByNoList, getSPLedgerEntries, getSPCurrentMonthInvoiceAmoun
 
 import CustomDateRangeModal from './components/CustomDateRangeModal';
 
+const BATCH_SIZE = 90;
+
+const parseCustomerList = (customersForSalesperson) => {
+  if (!customersForSalesperson) return [];
+
+  return [...new Set(
+    customersForSalesperson
+      .split('|')
+      .map(item => item.trim())
+      .filter(Boolean)
+  )];
+};
+
+const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
+
 
 const getCurrentMonthDateRange = () => {
   const now = new Date();
@@ -197,33 +218,54 @@ const SPFinancialDashboard = () => {
           return;
         }
 
+        const customerList = parseCustomerList(customersForSalesperson);
+        const customerChunks = chunkArray(customerList, BATCH_SIZE);
+        const customerChunkStrings = customerChunks.map(chunk => chunk.join('|'));
+
         const { startDate, endDate } = getCurrentMonthDateRange();
         const today = getTodayDate();
         console.log('Fetching customer data for month:', startDate, 'to', endDate);
 
-        const [customerListResult, ledgerResult, currentMonthResult, overdueResult] = await Promise.all([
-          getCustomersByNoList(customersForSalesperson),
-          getSPLedgerEntries(customersForSalesperson, { open: true }),
+        const customerListPromises = customerChunkStrings.map(chunkStr =>
+          getCustomersByNoList(chunkStr)
+        );
+
+        const ledgerPromises = customerChunkStrings.map(chunkStr =>
+          getSPLedgerEntries(chunkStr, { open: true })
+        );
+
+        const [customerListResults, ledgerResults, currentMonthResult, overdueResult] = await Promise.all([
+          Promise.all(customerListPromises),
+          Promise.all(ledgerPromises),
           getSPCurrentMonthInvoiceAmount(effectiveSalespersonCodes, startDate, endDate),
           getSPOverdueInvoiceAmount(effectiveSalespersonCodes, today)
         ]);
 
-        if (customerListResult.success && customerListResult.data.length > 0) {
+        const failedCustomerListResult = customerListResults.find(r => !r?.success);
+        const combinedCustomerList = customerListResults.flatMap(r => r?.data || []);
+
+        if (!failedCustomerListResult && combinedCustomerList.length > 0) {
           let totalBalanceLCY = 0;
           let totalCreditLimitLCY = 0;
 
-          customerListResult.data.forEach(customer => {
+          combinedCustomerList.forEach(customer => {
             totalBalanceLCY += customer.balanceLCY || 0;
             totalCreditLimitLCY += customer.creditLimitLCY || 0;
           });
 
-          setCustomerFinancialData({ balanceLCY: totalBalanceLCY, creditLimitLCY: totalCreditLimitLCY });
+          setCustomerFinancialData({
+            balanceLCY: totalBalanceLCY,
+            creditLimitLCY: totalCreditLimitLCY
+          });
 
-          const utilizationPercentage = totalCreditLimitLCY > 0 ? (totalBalanceLCY / totalCreditLimitLCY) * 100 : 0;
-          console.log('utilizationPercentage: ', utilizationPercentage)
+          const utilizationPercentage =
+            totalCreditLimitLCY > 0 ? (totalBalanceLCY / totalCreditLimitLCY) * 100 : 0;
+
           setCreditUtilization(`${utilizationPercentage.toFixed(1)}%`);
         } else {
-          console.error('Failed to fetch customer list data:', customerListResult.error);
+          console.error('Failed to fetch one or more customer list batches:', failedCustomerListResult?.error);
+          setCustomerFinancialData({ balanceLCY: 0, creditLimitLCY: 0 });
+          setCreditUtilization('0%');
         }
 
         // if (customerResult.success) {
@@ -261,10 +303,11 @@ const SPFinancialDashboard = () => {
           setOverdueAmount(0);
         }
 
-        if (ledgerResult.success) {
-          const ledgerEntries = ledgerResult.data;
-          // console.log('ledger entriesss: ', ledgerResult.data)
-          const mappedTransactions = ledgerEntries.map((entry, index) => {
+        const failedLedgerResult = ledgerResults.find(r => !r?.success);
+        const combinedLedgerEntries = ledgerResults.flatMap(r => r?.data || []);
+
+        if (!failedLedgerResult) {
+          const mappedTransactions = combinedLedgerEntries.map((entry, index) => {
             const documentType = entry.documentType?.replace(/_x0020_/g, ' ');
 
             let type = 'invoice';
@@ -303,8 +346,7 @@ const SPFinancialDashboard = () => {
                 } else {
                   status = 'pending';
                 }
-              }
-              else {
+              } else {
                 const dueDate = new Date(entry.postingDate);
                 dueDate.setDate(dueDate.getDate() + 30);
                 calculatedDueDate = dueDate.toISOString().split('T')[0];
@@ -339,10 +381,9 @@ const SPFinancialDashboard = () => {
           });
 
           setAllTransactions(mappedTransactions);
-          console.log('allTransactionsssss: ', allTransactions);
           setFilteredTransactions(mappedTransactions);
         } else {
-          console.error('Failed to fetch ledger entries:', ledgerResult.error);
+          console.error('Failed to fetch one or more ledger batches:', failedLedgerResult?.error);
           setAllTransactions(mockTransactions);
           setFilteredTransactions(mockTransactions);
         }

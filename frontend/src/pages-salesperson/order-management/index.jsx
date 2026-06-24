@@ -13,7 +13,26 @@ import { useNavigate } from 'react-router-dom';
 import { getSPSalesOrder } from 'services/BusinessCentralAPI';
 import CustomDateRangeModal from './components/CustomDateRangeModal';
 
+const BATCH_SIZE = 90;
 
+const parseCustomerList = (customersForSalesperson) => {
+  if (!customersForSalesperson) return [];
+
+  return [...new Set(
+    customersForSalesperson
+      .split('|')
+      .map(item => item.trim())
+      .filter(Boolean)
+  )];
+};
+
+const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
 // const mapStatus = (bcStatus) => {
 //   if (!bcStatus) return 'open';
 //   const s = bcStatus.toLowerCase().replace(/_x0020_/g, ' ');
@@ -132,10 +151,23 @@ const SPOrderManagement = () => {
           return;
         }
         const { startDate, endDate } = getCurrentFinancialYearDateRange();
-        const result = await getSPSalesOrder(customersForSalesperson, startDate, endDate);
 
-        if (result.success) {
-          const mapped = result.data.map((entry) => ({
+        const customerList = parseCustomerList(customersForSalesperson);
+        const customerChunks = chunkArray(customerList, BATCH_SIZE);
+        const customerChunkStrings = customerChunks.map(chunk => chunk.join('|'));
+
+        const orderResults = await Promise.all(
+          customerChunkStrings.map(chunkStr =>
+            getSPSalesOrder(chunkStr, startDate, endDate)
+          )
+        );
+
+        const failedOrderResult = orderResults.find(r => !r?.success);
+
+        if (!failedOrderResult) {
+          const combinedOrderData = orderResults.flatMap(r => r?.data || []);
+
+          const mapped = combinedOrderData.map((entry) => ({
             id: entry.no,
             orderNumber: entry.no,
             orderDate: entry.postingDate || '',
@@ -154,7 +186,7 @@ const SPOrderManagement = () => {
 
           setAllOrders(mapped);
         } else {
-          console.error('Failed to fetch sales orders:', result.error);
+          console.error('One or more sales order batch calls failed:', failedOrderResult?.error);
           setAllOrders([]);
         }
       } catch (error) {

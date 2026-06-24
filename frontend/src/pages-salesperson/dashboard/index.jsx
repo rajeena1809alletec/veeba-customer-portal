@@ -10,6 +10,26 @@ import RecentActivitiesFeed from './components/RecentActivitiesFeed';
 import UrgentNotificationsPanel from './components/UrgentNotificationsPanel';
 import { getCustomersByNoList, getSPInvoicedValueAmount, getSPPaymentValueAmount, getSPOpenOrderValue, getSPBlockedOrderValue } from 'services/BusinessCentralAPI';
 
+const BATCH_SIZE = 90;
+
+const parseCustomerList = (customersForSalesperson) => {
+  if (!customersForSalesperson) return [];
+
+  return [...new Set(
+    customersForSalesperson
+      .split('|')
+      .map(item => item.trim())
+      .filter(Boolean)
+  )];
+};
+
+const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
 
 const getCurrentMonthRange = () => {
   const now = new Date();
@@ -113,19 +133,28 @@ const SPDashboard = () => {
           return;
         }
 
-        const result = await getCustomersByNoList(customersForSalesperson);
+        const customerList = parseCustomerList(customersForSalesperson);
+        const customerChunks = chunkArray(customerList, BATCH_SIZE);
+        const customerChunkStrings = customerChunks.map(chunk => chunk.join('|'));
+
+        const customerResults = await Promise.all(
+          customerChunkStrings.map(chunkStr => getCustomersByNoList(chunkStr))
+        );
 
         let totalBalanceLCY = 0;
         let totalCreditLimitLCY = 0;
 
-        if (result.success && result.data.length > 0) {
-          result.data.forEach(customer => {
+        const failedCustomerResult = customerResults.find(r => !r?.success);
+        const combinedCustomerData = customerResults.flatMap(r => r?.data || []);
+
+        if (!failedCustomerResult && combinedCustomerData.length > 0) {
+          combinedCustomerData.forEach(customer => {
             totalBalanceLCY += customer.balanceLCY || 0;
             totalCreditLimitLCY += customer.creditLimitLCY || 0;
           });
-          console.log('Aggregated customer data for SP dashboard:', result.data);
+          console.log('Aggregated customer data for SP dashboard:', combinedCustomerData);
         } else {
-          console.error('Failed to fetch customers from customer list:', result.error);
+          console.error('Failed to fetch one or more customer batches:', failedCustomerResult?.error);
         }
 
         const outstandingBalance = `₹${totalBalanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

@@ -12,9 +12,28 @@ import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { useNavigate } from 'react-router-dom';
 import { getSPDispatchDetails } from 'services/BusinessCentralAPI';
-
-
 import CustomDateRangeModal from './components/CustomDateRangeModal';
+const BATCH_SIZE = 90;
+
+const parseCustomerList = (customersForSalesperson) => {
+  if (!customersForSalesperson) return [];
+
+  return [...new Set(
+    customersForSalesperson
+      .split('|')
+      .map(item => item.trim())
+      .filter(Boolean)
+  )];
+};
+
+const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
+
 
 
 const getCurrentFinancialYearDateRange = () => {
@@ -208,17 +227,27 @@ const SPDispatchDetails = () => {
         console.log('Fetching customer data for month:', startDate, 'to', endDate);
 
 
-        const dispatchResult = await getSPDispatchDetails(customersForSalesperson, startDate, endDate);
+        const customerList = parseCustomerList(customersForSalesperson);
+        const customerChunks = chunkArray(customerList, BATCH_SIZE);
 
-        if (dispatchResult.success) {
-          const mapped = dispatchResult.data.map((entry) => ({
+        const dispatchPromises = customerChunks.map(chunk =>
+          getSPDispatchDetails(chunk.join('|'), startDate, endDate)
+        );
+
+        const dispatchResults = await Promise.all(dispatchPromises);
+        const failedDispatchResult = dispatchResults.find(r => !r?.success);
+
+        if (!failedDispatchResult) {
+          const combinedDispatchData = dispatchResults.flatMap(r => r?.data || []);
+
+          const mapped = combinedDispatchData.map((entry) => ({
             id: entry.no,
             invoiceNo: entry.no,
             invoiceDate: entry.postingDate,
             dispatchDate: entry.postingDate,
             lrNo: entry.lrRRNo || '',
             transporterName: entry.transporterVendorNo || '',
-            driverContact: entry.driverMobNo || '',           // not in API yet
+            driverContact: entry.driverMobNo || '',
             customerNo: entry.sellToCustomerNo,
             salespersonCode: entry.salespersonCode,
             driverName: entry.driverName || '',
@@ -228,7 +257,7 @@ const SPDispatchDetails = () => {
           setAllTransactions(mapped);
           setFilteredTransactions(mapped);
         } else {
-          console.error('Failed to fetch dispatch details:', dispatchResult.error);
+          console.error('One or more dispatch batch calls failed:', failedDispatchResult?.error);
           setAllTransactions([]);
           setFilteredTransactions([]);
         }

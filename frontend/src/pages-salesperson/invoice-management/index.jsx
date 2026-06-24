@@ -12,6 +12,26 @@ import InvoiceSummary from './components/InvoiceSummary';
 import InvoiceTable from './components/InvoiceTable';
 // import BulkActions from './components/BulkActions';
 
+const BATCH_SIZE = 90;
+const parseCustomerList = (customersForSalesperson) => {
+  if (!customersForSalesperson) return [];
+
+  return [...new Set(
+    customersForSalesperson
+      .split('|')
+      .map(item => item.trim())
+      .filter(Boolean)
+  )];
+};
+
+const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
+
 const getCurrentFinancialYearDateRange = () => {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -83,86 +103,6 @@ const SPInvoiceManagement = () => {
       gst: 8222.20,
       status: "pending",
       type: "invoice"
-    },
-    {
-      id: 3,
-      invoiceNumber: "CN-2026-0124",
-      orderRef: "ORD-2026-1156",
-      date: "02/01/2026",
-      amount: 8450.00,
-      gst: 1521.00,
-      status: "paid",
-      type: "credit_note"
-    },
-    {
-      id: 4,
-      invoiceNumber: "INV-2026-0845",
-      orderRef: "ORD-2026-1187",
-      date: "28/12/2025",
-      amount: 62340.75,
-      gst: 11221.34,
-      status: "overdue",
-      type: "invoice"
-    },
-    {
-      id: 5,
-      invoiceNumber: "INV-2026-0844",
-      orderRef: "ORD-2026-1165",
-      date: "26/12/2025",
-      amount: 38920.40,
-      gst: 7005.67,
-      status: "partially_paid",
-      type: "invoice"
-    },
-    {
-      id: 6,
-      invoiceNumber: "INV-2026-0843",
-      orderRef: "ORD-2026-1143",
-      date: "22/12/2025",
-      amount: 51234.60,
-      gst: 9222.23,
-      status: "paid",
-      type: "invoice"
-    },
-    {
-      id: 7,
-      invoiceNumber: "INV-2026-0842",
-      orderRef: "ORD-2026-1121",
-      date: "20/12/2025",
-      amount: 29876.30,
-      gst: 5377.73,
-      status: "pending",
-      type: "invoice"
-    },
-    {
-      id: 8,
-      invoiceNumber: "CN-2026-0123",
-      orderRef: "ORD-2026-1098",
-      date: "18/12/2025",
-      amount: 5670.00,
-      gst: 1020.60,
-      status: "paid",
-      type: "credit_note"
-    },
-    {
-      id: 9,
-      invoiceNumber: "INV-2026-0841",
-      orderRef: "ORD-2026-1087",
-      date: "15/12/2025",
-      amount: 73450.80,
-      gst: 13221.14,
-      status: "overdue",
-      type: "invoice"
-    },
-    {
-      id: 10,
-      invoiceNumber: "INV-2026-0840",
-      orderRef: "ORD-2026-1054",
-      date: "12/12/2025",
-      amount: 41290.50,
-      gst: 7432.29,
-      status: "paid",
-      type: "invoice"
     }
   ];
 
@@ -207,14 +147,25 @@ const SPInvoiceManagement = () => {
 
         const today = getTodayDate();
 
-        const [result, pendingResult, overdueResult] = await Promise.all([
-          getSPDispatchDetails(customersForSalesperson, startDate, endDate),
+        const customerList = parseCustomerList(customersForSalesperson);
+        const customerChunks = chunkArray(customerList, BATCH_SIZE);
+
+        const dispatchPromises = customerChunks.map(chunk =>
+          getSPDispatchDetails(chunk.join(' | '), startDate, endDate)
+        );
+
+        const [dispatchResults, pendingResult, overdueResult] = await Promise.all([
+          Promise.all(dispatchPromises),
           getSPPendingInvoiceAmount(effectiveSalespersonCodes),
           getSPOverdueInvoiceAmount(effectiveSalespersonCodes, today)
         ]);
 
-        if (result.success) {
-          const mapped = result.data.map((entry, index) => ({
+        const failedDispatchResult = dispatchResults.find(r => !r?.success);
+
+        if (!failedDispatchResult) {
+          const combinedDispatchData = dispatchResults.flatMap(r => r?.data || []);
+
+          const mapped = combinedDispatchData.map((entry, index) => ({
             id: entry.no || index + 1,
             invoiceNumber: entry.no || '',
             orderRef: entry.orderNo || '',
@@ -233,8 +184,16 @@ const SPInvoiceManagement = () => {
 
           const totalInvoiced = mapped.reduce((sum, item) => sum + (item.amount || 0), 0);
           const totalGST = mapped.reduce((sum, item) => sum + (item.gst || 0), 0);
-          const pendingInvoiceAmount = pendingResult?.success && pendingResult?.data ? Math.abs(Number(pendingResult.data.amount || 0)) : 0;
-          const pendingInvoiceCount = pendingResult?.success && pendingResult?.data ? Number(pendingResult.data.invoiceCount || 0) : 0;
+          const pendingInvoiceAmount =
+            pendingResult?.success && pendingResult?.data
+              ? Math.abs(Number(pendingResult.data.amount || 0))
+              : 0;
+
+          const pendingInvoiceCount =
+            pendingResult?.success && pendingResult?.data
+              ? Number(pendingResult.data.invoiceCount || 0)
+              : 0;
+
           const overdueInvoiceAmount =
             overdueResult?.success && overdueResult?.data
               ? Math.abs(Number(overdueResult.data.amount || 0))
@@ -254,7 +213,7 @@ const SPInvoiceManagement = () => {
             totalGST
           });
         } else {
-          console.error('Failed to fetch invoice details:', result.error);
+          console.error('One or more dispatch batch calls failed:', failedDispatchResult?.error);
           setAllInvoices([]);
           setFilteredInvoices([]);
         }
