@@ -948,7 +948,7 @@ export const getCustomersForMultipleSalespersons = async (asoCodes) => {
 };
 export const getSalesOrder = async (customerNo, postingDateFrom, postingDateTo) => {
     try {
-        let filterQuery = `sellToCustomerNo eq '${customerNo}' and documentType eq 'Order'`;
+        let filterQuery = `sellToCustomerNo eq '${customerNo}' and documentType eq 'Order' and shortCloseSO eq false`;
 
         if (postingDateFrom && postingDateTo) {
             filterQuery += ` and postingDate ge ${postingDateFrom} and postingDate le ${postingDateTo}`;
@@ -997,7 +997,7 @@ export const getSPSalesOrder = async (customersForSalesperson, postingDateFrom, 
 
         const customerFilter = customerNos.map(no => `sellToCustomerNo eq '${no}'`).join(' or ');
 
-        let filterQuery = `(${customerFilter}) and documentType eq 'Order'`;
+        let filterQuery = `(${customerFilter}) and documentType eq 'Order' and shortCloseSO eq false`;
 
         if (postingDateFrom && postingDateTo) {
             filterQuery += ` and postingDate ge ${postingDateFrom} and postingDate le ${postingDateTo}`;
