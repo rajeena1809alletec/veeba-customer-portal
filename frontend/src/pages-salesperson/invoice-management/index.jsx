@@ -154,10 +154,13 @@ const SPInvoiceManagement = () => {
           getSPDispatchDetails(chunk.join(' | '), startDate, endDate)
         );
 
-        const [dispatchResults, pendingResult, overdueResult] = await Promise.all([
+        const [dispatchResults,
+          // pendingResult,
+          // overdueResult
+        ] = await Promise.all([
           Promise.all(dispatchPromises),
-          getSPPendingInvoiceAmount(effectiveSalespersonCodes),
-          getSPOverdueInvoiceAmount(effectiveSalespersonCodes, today)
+          // getSPPendingInvoiceAmount(effectiveSalespersonCodes),
+          // getSPOverdueInvoiceAmount(effectiveSalespersonCodes, today)
         ]);
 
         const failedDispatchResult = dispatchResults.find(r => !r?.success);
@@ -165,53 +168,35 @@ const SPInvoiceManagement = () => {
         if (!failedDispatchResult) {
           const combinedDispatchData = dispatchResults.flatMap(r => r?.data || []);
 
-          const mapped = combinedDispatchData.map((entry, index) => ({
-            id: entry.no || index + 1,
-            invoiceNumber: entry.no || '',
-            orderRef: entry.orderNo || '',
-            date: entry.postingDate || '',
-            amount: Number(entry.amount || 0),
-            gst: Number(entry.gstAmount || 0),
-            status: entry.status?.toLowerCase() || 'pending',
-            type: entry.documentType?.toLowerCase() || 'invoice',
-            customerNo: entry.sellToCustomerNo || '',
-            salespersonCode: entry.salespersonCode || '',
-            salespersonName: entry.salesperson?.[0]?.name || ''
-          }));
+          const mapped = combinedDispatchData.map((entry, index) => {
+            const salesperson = entry.customer?.[0]?.salesperson?.[0] || {};
+
+            return {
+              id: entry.no || index + 1,
+              invoiceNumber: entry.no || '',
+              orderRef: entry.orderNo || '',
+              date: entry.postingDate || '',
+              amount: Number(entry.amount || 0),
+              gst: Number(entry.gstAmount || 0),
+              status: entry.status?.toLowerCase() || 'pending',
+              type: entry.documentType?.toLowerCase() || 'invoice',
+              customerNo: entry.sellToCustomerNo || '',
+              salespersonCode: salesperson.code || '',
+              salespersonName: salesperson.name || '',
+              salespersonLevel: salesperson.level || '',
+              nsmName: salesperson.salespersonsHierarchyNSM?.[0]?.name || '',
+              rsmName: salesperson.salespersonsHierarchyRSM?.[0]?.name || '',
+              zsmName: salesperson.salespersonsHierarchyZSM?.[0]?.name || '',
+              asmName: salesperson.salespersonsHierarchyASM?.[0]?.name || '',
+              asoName: salesperson.salespersonsHierarchyASO?.[0]?.name || '',
+              vpName: salesperson.salespersonsHierarchyVP?.[0]?.name || ''
+            };
+          });
 
           setAllInvoices(mapped);
           setFilteredInvoices(mapped);
 
-          const totalInvoiced = mapped.reduce((sum, item) => sum + (item.amount || 0), 0);
-          const totalGST = mapped.reduce((sum, item) => sum + (item.gst || 0), 0);
-          const pendingInvoiceAmount =
-            pendingResult?.success && pendingResult?.data
-              ? Math.abs(Number(pendingResult.data.amount || 0))
-              : 0;
-
-          const pendingInvoiceCount =
-            pendingResult?.success && pendingResult?.data
-              ? Number(pendingResult.data.invoiceCount || 0)
-              : 0;
-
-          const overdueInvoiceAmount =
-            overdueResult?.success && overdueResult?.data
-              ? Math.abs(Number(overdueResult.data.amount || 0))
-              : 0;
-
-          const overdueInvoiceCount =
-            overdueResult?.success && overdueResult?.data
-              ? Number(overdueResult.data.invoiceCount || 0)
-              : 0;
-
-          setSummaryData({
-            totalInvoiced,
-            pendingPayments: pendingInvoiceAmount,
-            pendingCount: pendingInvoiceCount,
-            overdueAmount: overdueInvoiceAmount,
-            overdueCount: overdueInvoiceCount,
-            totalGST
-          });
+          // k
         } else {
           console.error('One or more dispatch batch calls failed:', failedDispatchResult?.error);
           setAllInvoices([]);
@@ -240,8 +225,15 @@ const SPInvoiceManagement = () => {
           inv?.invoiceNumber?.toLowerCase()?.includes(searchLower) ||
           inv?.orderRef?.toLowerCase()?.includes(searchLower) ||
           inv?.customerNo?.toLowerCase()?.includes(searchLower) ||
-          inv?.salespersonCode?.toLowerCase()?.includes(searchLower) ||
-          inv?.salespersonName?.toLowerCase()?.includes(searchLower)
+          // inv?.salespersonCode?.toLowerCase()?.includes(searchLower) ||
+          inv?.salespersonName?.toLowerCase()?.includes(searchLower) ||
+          inv?.salespersonLevel?.toLowerCase()?.includes(searchLower) ||
+          inv?.nsmName?.toLowerCase()?.includes(searchLower) ||
+          inv?.rsmName?.toLowerCase()?.includes(searchLower) ||
+          inv?.zsmName?.toLowerCase()?.includes(searchLower) ||
+          inv?.asmName?.toLowerCase()?.includes(searchLower) ||
+          inv?.asoName?.toLowerCase()?.includes(searchLower) ||
+          inv?.vpName?.toLowerCase()?.includes(searchLower)
       );
     }
 
@@ -407,20 +399,33 @@ const SPInvoiceManagement = () => {
       'Invoice Number',
       'Order Ref',
       'Customer No',
-      'Salesperson Code',
-      'Salesperson Name',
       'Date',
-      'Amount'
+      'Amount',
+      // 'Salesperson Code',
+      'Salesperson Name',
+      'Salesperson Level',
+      'NSM Name',
+      'RSM Name',
+      'ZSM Name',
+      'ASM Name',
+      'ASO Name',
+      'VP Name'
     ];
-
     const rows = filteredInvoices.map(inv => [
       inv.invoiceNumber || '',
       inv.orderRef || '',
       inv.customerNo || '',
-      inv.salespersonCode || '',
-      inv.salespersonName || '',
       inv.date || '',
-      inv.amount ?? 0
+      inv.amount ?? 0,
+      // inv.salespersonCode || '',
+      inv.salespersonName || '',
+      inv.salespersonLevel || '',
+      inv.nsmName || '',
+      inv.rsmName || '',
+      inv.zsmName || '',
+      inv.asmName || '',
+      inv.asoName || '',
+      inv.vpName || ''
     ]);
 
     const csvContent = [headers, ...rows]
@@ -500,9 +505,9 @@ const SPInvoiceManagement = () => {
             </div>
 
             {/* Summary Cards */}
-            <div className="mb-6 md:mb-8">
+            {/* <div className="mb-6 md:mb-8">
               <InvoiceSummary summary={summaryData} />
-            </div>
+            </div> */}
 
             {/* Filters */}
             <div className="mb-6">

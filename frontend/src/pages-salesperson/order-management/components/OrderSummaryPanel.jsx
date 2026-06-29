@@ -19,14 +19,12 @@ const OrderSummaryPanel = ({ summary }) => {
       // trendUp: true
     },
     {
-      label: 'Open Orders',
+      label: 'Orders In Process',
       value: summary?.openOrders,
       amount: summary?.openOrdersAmount || 0,
       icon: 'Clock',
       iconColor: 'var(--color-warning)',
       bgColor: 'bg-warning/10',
-      // trend: '+5%',
-      // trendUp: true
     },
     {
       label: 'Blocked Orders',

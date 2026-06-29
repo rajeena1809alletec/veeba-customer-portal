@@ -164,8 +164,8 @@ const SPDashboard = () => {
 
 
 
-        let invoiceAmountCM = '₹0';
-        let invoiceAmountFY = '₹0';
+        // let invoiceAmountCM = '₹0';
+        // let invoiceAmountFY = '₹0';
         let paymentAmountCM = '₹0';
         let paymentAmountFY = '₹0';
         let openOrderValue = '₹0';
@@ -174,37 +174,36 @@ const SPDashboard = () => {
         const { startDate: cmStart, endDate: cmEnd } = getCurrentMonthRange();
         const { startDate: fyStart, endDate: fyEnd } = getCurrentFYRange();
         const [
-          invoicedCMResult,
-          invoicedFYResult,
+          // invoicedCMResult,
+          // invoicedFYResult,
           paymentCMResult,
           paymentFYResult,
           openOrderResult,
           blockedOrderResult
         ] = await Promise.all([
-          getSPInvoicedValueAmount(effectiveSalespersonCodes, cmStart, cmEnd),
-          getSPInvoicedValueAmount(effectiveSalespersonCodes, fyStart, fyEnd),
+          // getSPInvoicedValueAmount(effectiveSalespersonCodes, cmStart, cmEnd),
+          // getSPInvoicedValueAmount(effectiveSalespersonCodes, fyStart, fyEnd),
           getSPPaymentValueAmount(effectiveSalespersonCodes, cmStart, cmEnd),
           getSPPaymentValueAmount(effectiveSalespersonCodes, fyStart, fyEnd),
           getSPOpenOrderValue(effectiveSalespersonCodes),
           getSPBlockedOrderValue(effectiveSalespersonCodes),
         ]);
 
-        // Fetch Invoiced Value - Current Month
-        if (invoicedCMResult.success) {
-          const amt = invoicedCMResult.data.amount || 0;
-          invoiceAmountCM = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        } else {
-          console.error('Failed to fetch invoiced value CM:', invoicedCMResult.error);
-        }
+        // // Fetch Invoiced Value - Current Month
+        // if (invoicedCMResult.success) {
+        //   const amt = invoicedCMResult.data.amount || 0;
+        //   invoiceAmountCM = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // } else {
+        //   console.error('Failed to fetch invoiced value CM:', invoicedCMResult.error);
+        // }
 
-        // Fetch Invoiced Value - Current Financial Year
-
-        if (invoicedFYResult.success) {
-          const amt = invoicedFYResult.data.amount || 0;
-          invoiceAmountFY = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        } else {
-          console.error('Failed to fetch invoiced value FY:', invoicedFYResult.error);
-        }
+        // // Fetch Invoiced Value - Current Financial Year
+        // if (invoicedFYResult.success) {
+        //   const amt = invoicedFYResult.data.amount || 0;
+        //   invoiceAmountFY = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // } else {
+        //   console.error('Failed to fetch invoiced value FY:', invoicedFYResult.error);
+        // }
 
 
         if (paymentCMResult.success) {
@@ -254,44 +253,44 @@ const SPDashboard = () => {
                 trendValue: "8.5% from last month",
                 navigateTo: "/sp-financial-dashboard",
               },
-              ...(totalCreditLimitLCY > 1
-                ? [{
-                  id: 2,
-                  title: "Credit Limit Utilization",
-                  value: creditUtilization,
-                  subtitle: creditUtilizationSubtitle,
-                  icon: "TrendingUp",
-                  iconColor: "var(--color-warning)",
-                  bgColor: "bg-warning/10",
-                  trend: "up",
-                  trendValue: "5.2% increase",
-                  navigateTo: "/sp-financial-dashboard",
-                }]
-                : []),
-              {
-                id: 3,
-                title: "Invoiced Value (CM)",
-                value: invoiceAmountCM,
-                subtitle: `Current Month`,
-                icon: "ShoppingCart",
-                iconColor: "var(--color-primary)",
-                bgColor: "bg-primary/10",
-                trend: "down",
-                trendValue: "2 less than yesterday",
-                navigateTo: "/sp-invoice-management",
-              },
-              {
-                id: 4,
-                title: "Invoiced Value (FY)",
-                value: invoiceAmountFY,
-                subtitle: `Financial Year Total`,
-                icon: "ShoppingCart",
-                iconColor: "var(--color-primary)",
-                bgColor: "bg-primary/10",
-                trend: "up",
-                trendValue: "FY cumulative",
-                navigateTo: "/sp-invoice-management",
-              },
+              // ...(totalCreditLimitLCY > 1
+              //   ? [{
+              //     id: 2,
+              //     title: "Credit Limit Utilization",
+              //     value: creditUtilization,
+              //     subtitle: creditUtilizationSubtitle,
+              //     icon: "TrendingUp",
+              //     iconColor: "var(--color-warning)",
+              //     bgColor: "bg-warning/10",
+              //     trend: "up",
+              //     trendValue: "5.2% increase",
+              //     navigateTo: "/sp-financial-dashboard",
+              //   }]
+              //   : []),
+              // {
+              //   id: 3,
+              //   title: "Invoiced Value (CM)",
+              //   value: invoiceAmountCM,
+              //   subtitle: `Current Month`,
+              //   icon: "ShoppingCart",
+              //   iconColor: "var(--color-primary)",
+              //   bgColor: "bg-primary/10",
+              //   trend: "down",
+              //   trendValue: "2 less than yesterday",
+              //   navigateTo: "/sp-invoice-management",
+              // },
+              // {
+              //   id: 4,
+              //   title: "Invoiced Value (FY)",
+              //   value: invoiceAmountFY,
+              //   subtitle: `Financial Year Total`,
+              //   icon: "ShoppingCart",
+              //   iconColor: "var(--color-primary)",
+              //   bgColor: "bg-primary/10",
+              //   trend: "up",
+              //   trendValue: "FY cumulative",
+              //   navigateTo: "/sp-invoice-management",
+              // },
               {
                 id: 5,
                 title: "Payment Received (CM)",

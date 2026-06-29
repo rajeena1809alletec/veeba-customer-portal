@@ -86,16 +86,6 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                   <Icon name={sortConfig?.key === 'customerNo' ? sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown' : 'ChevronsUpDown'} size={16} />
                 </div>
               </th>
-              <th
-                className="text-left p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth" onClick={() => handleSort('salespersonCode')}>
-                <div className="flex items-center gap-2">
-                  Salesperson Code
-                  <Icon name={sortConfig?.key === 'salespersonCode' ? sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown' : 'ChevronsUpDown'} size={16} />
-                </div>
-              </th>
-              <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
-                Salesperson Name
-              </th>
               <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
                 Transporter Name
               </th>
@@ -111,6 +101,37 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
               <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
                 Driver Contact
               </th>
+              {/* <th
+                className="text-left p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth" onClick={() => handleSort('salespersonCode')}>
+                <div className="flex items-center gap-2">
+                  Salesperson Code
+                  <Icon name={sortConfig?.key === 'salespersonCode' ? sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown' : 'ChevronsUpDown'} size={16} />
+                </div>
+              </th> */}
+              <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
+                Salesperson Name
+              </th>
+              <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                Salesperson Level
+              </th>
+              <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                NSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                RSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                ZSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                ASM Name
+              </th>
+              <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                ASO Name
+              </th>
+              <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                VP Name
+              </th>
               {/* <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
                 Actions
               </th> */}
@@ -119,7 +140,7 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
           <tbody>
             {sortedTransactions?.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-8 text-center font-body text-sm text-muted-foreground">
+                <td colSpan={16} className="p-8 text-center font-body text-sm text-muted-foreground">
                   No dispatch records found.
                 </td>
               </tr>
@@ -145,16 +166,6 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className="font-caption text-sm text-foreground data-text">
-                      {transaction?.salespersonCode || '-'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className="font-caption text-sm text-foreground data-text">
-                      {transaction?.salespersonName || '—'}
-                    </span>
-                  </td>
-                  <td className="p-4">
                     <span className="font-body text-sm text-foreground">
                       {transaction?.transporterName || '-'}
                     </span>
@@ -177,6 +188,57 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                   <td className="p-4">
                     <span className="font-body text-sm text-foreground">
                       {transaction?.driverContact || '-'}
+                    </span>
+                  </td>
+                  {/* <td className="p-4">
+                    <span className="font-caption text-sm text-foreground data-text">
+                      {transaction?.salespersonCode || '-'}
+                    </span>
+                  </td> */}
+                  <td className="p-4">
+                    <span className="font-caption text-sm text-foreground data-text">
+                      {transaction?.salespersonName || '—'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {transaction?.salespersonLevel || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {transaction?.nsmName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {transaction?.rsmName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {transaction?.zsmName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {transaction?.asmName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {transaction?.asoName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {transaction?.vpName || '-'}
                     </span>
                   </td>
                   {/* <td className="p-4">
@@ -229,16 +291,7 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                   <p className="font-caption text-xs text-muted-foreground">Customer No</p>
                   <p className="font-caption text-sm text-foreground data-text">{transaction?.customerNo || '-'}</p>
                 </div>
-                <div>
-                  <p className="font-caption text-xs text-muted-foreground">Salesperson Code</p>
-                  <p className="font-caption text-sm text-foreground data-text">{transaction?.salespersonCode || '-'}</p>
-                </div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-caption text-xs text-muted-foreground">Salesperson Name</span>
-                  <span className="font-body text-sm text-foreground data-text">
-                    {transaction?.salespersonName || '—'}
-                  </span>
-                </div>
+
                 <div>
                   <p className="font-caption text-xs text-muted-foreground">Transporter</p>
                   <p className="font-body text-sm text-foreground">{transaction?.transporterName || '-'}</p>
@@ -258,6 +311,65 @@ const DispatchTable = ({ transactions, onViewDetails }) => {
                 <div>
                   <p className="font-caption text-xs text-muted-foreground">Driver Contact</p>
                   <p className="font-body text-sm text-foreground">{transaction?.driverContact || '-'}</p>
+                </div>
+                {/* <div>
+                  <p className="font-caption text-xs text-muted-foreground">Salesperson Code</p>
+                  <p className="font-caption text-sm text-foreground data-text">{transaction?.salespersonCode || '-'}</p>
+                </div> */}
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">Salesperson Name</p>
+                  <p className="font-body text-sm text-foreground data-text">
+                    {transaction?.salespersonName || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">Salesperson Level</p>
+                  <p className="font-body text-sm text-foreground">
+                    {transaction?.salespersonLevel || '-'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">NSM Name</p>
+                  <p className="font-body text-sm text-foreground">
+                    {transaction?.nsmName || '-'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">RSM Name</p>
+                  <p className="font-body text-sm text-foreground">
+                    {transaction?.rsmName || '-'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">ZSM Name</p>
+                  <p className="font-body text-sm text-foreground">
+                    {transaction?.zsmName || '-'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">ASM Name</p>
+                  <p className="font-body text-sm text-foreground">
+                    {transaction?.asmName || '-'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">ASO Name</p>
+                  <p className="font-body text-sm text-foreground">
+                    {transaction?.asoName || '-'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-caption text-xs text-muted-foreground">VP Name</p>
+                  <p className="font-body text-sm text-foreground">
+                    {transaction?.vpName || '-'}
+                  </p>
                 </div>
               </div>
             </div>

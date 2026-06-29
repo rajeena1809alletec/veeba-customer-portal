@@ -24,6 +24,7 @@ const Header = () => {
     { label: 'Orders', path: '/sp-order-management', icon: 'ShoppingCart' },
     { label: 'Invoices', path: '/sp-invoice-management', icon: 'FileText' },
     { label: 'Dispatch', path: '/sp-dispatch-details', icon: 'Truck' },
+    { label: 'Customers', path: '/sp-customers', icon: 'Users' },
     { label: 'Finances', path: '/sp-financial-dashboard', icon: 'DollarSign' },
     { label: 'Profile', path: '/sp-customer-profile', icon: 'User' },
     { label: 'Support', path: '/sp-complaint-management', icon: 'MessageSquare' },

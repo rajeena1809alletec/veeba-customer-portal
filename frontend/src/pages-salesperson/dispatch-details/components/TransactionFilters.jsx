@@ -17,7 +17,7 @@ const TransactionFilters = ({
     { value: 'invoice', label: 'Invoices' },
     { value: 'credit_note', label: 'Credit Notes' },
     { value: 'payment', label: 'Payments' },
-    { value: 'debit_note', label: 'Debit Notes' }
+    // { value: 'debit_note', label: 'Debit Notes' }
   ];
 
   const dateRangeOptions = [

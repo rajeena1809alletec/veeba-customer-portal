@@ -2,8 +2,12 @@ import React from 'react';
 
 const OrderStatusBadge = ({ status }) => {
   const statusConfig = {
-    open: {
-      label: 'Open',
+    // open: {
+    //   label: 'Open',
+    //   className: 'bg-warning/10 text-warning border-warning/20'
+    // },
+    'order in process': {
+      label: 'Order In Process',
       className: 'bg-warning/10 text-warning border-warning/20'
     },
     released: {
@@ -37,8 +41,7 @@ const OrderStatusBadge = ({ status }) => {
   };
 
   const normalizedStatus = status?.toLowerCase()?.trim();
-  const config = statusConfig?.[normalizedStatus] || statusConfig?.open;
-
+  const config = statusConfig?.[normalizedStatus] || statusConfig?.['order in process'];
   return (
     <span
       className={`

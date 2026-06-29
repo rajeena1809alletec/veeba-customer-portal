@@ -240,19 +240,30 @@ const SPDispatchDetails = () => {
         if (!failedDispatchResult) {
           const combinedDispatchData = dispatchResults.flatMap(r => r?.data || []);
 
-          const mapped = combinedDispatchData.map((entry) => ({
-            id: entry.no,
-            invoiceNo: entry.no,
-            invoiceDate: entry.postingDate,
-            dispatchDate: entry.postingDate,
-            lrNo: entry.lrRRNo || '',
-            transporterName: entry.transporterVendorNo || '',
-            driverContact: entry.driverMobNo || '',
-            customerNo: entry.sellToCustomerNo,
-            salespersonCode: entry.salespersonCode,
-            driverName: entry.driverName || '',
-            salespersonName: entry.salesperson?.[0]?.name || '',
-          }));
+          const mapped = combinedDispatchData.map((entry) => {
+            const salesperson = entry.customer?.[0]?.salesperson?.[0] || {};
+
+            return {
+              id: entry.no || '',
+              invoiceNo: entry.no || '',
+              invoiceDate: entry.postingDate || '',
+              dispatchDate: entry.postingDate || '',
+              lrNo: entry.lrRRNo || '',
+              transporterName: entry.transporterVendorNo || '',
+              driverContact: entry.driverMobNo || '',
+              customerNo: entry.sellToCustomerNo || '',
+              salespersonCode: salesperson.code || entry.salespersonCode || '',
+              driverName: entry.driverName || '',
+              salespersonName: salesperson.name || '',
+              salespersonLevel: salesperson.level || '',
+              nsmName: salesperson.salespersonsHierarchyNSM?.[0]?.name || '',
+              rsmName: salesperson.salespersonsHierarchyRSM?.[0]?.name || '',
+              zsmName: salesperson.salespersonsHierarchyZSM?.[0]?.name || '',
+              asmName: salesperson.salespersonsHierarchyASM?.[0]?.name || '',
+              asoName: salesperson.salespersonsHierarchyASO?.[0]?.name || '',
+              vpName: salesperson.salespersonsHierarchyVP?.[0]?.name || ''
+            };
+          });
 
           setAllTransactions(mapped);
           setFilteredTransactions(mapped);
@@ -281,14 +292,23 @@ const SPDispatchDetails = () => {
     let filtered = [...allTransactions];
 
     if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase().trim();
+
       filtered = filtered.filter(t =>
-        t?.invoiceNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.lrNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.transporterName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.customerNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.salespersonCode?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.driverName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.salespersonName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+        t?.invoiceNo?.toLowerCase()?.includes(searchLower) ||
+        t?.lrNo?.toLowerCase()?.includes(searchLower) ||
+        t?.transporterName?.toLowerCase()?.includes(searchLower) ||
+        t?.customerNo?.toLowerCase()?.includes(searchLower) ||
+        t?.salespersonCode?.toLowerCase()?.includes(searchLower) ||
+        t?.driverName?.toLowerCase()?.includes(searchLower) ||
+        t?.salespersonName?.toLowerCase()?.includes(searchLower) ||
+        t?.salespersonLevel?.toLowerCase()?.includes(searchLower) ||
+        t?.nsmName?.toLowerCase()?.includes(searchLower) ||
+        t?.rsmName?.toLowerCase()?.includes(searchLower) ||
+        t?.zsmName?.toLowerCase()?.includes(searchLower) ||
+        t?.asmName?.toLowerCase()?.includes(searchLower) ||
+        t?.asoName?.toLowerCase()?.includes(searchLower) ||
+        t?.vpName?.toLowerCase()?.includes(searchLower)
       );
     }
 
@@ -403,9 +423,16 @@ const SPDispatchDetails = () => {
       'Transporter Name',
       'Driver Contact',
       'Customer No',
+      'Driver Name',
       'Salesperson Code',
       'Salesperson Name',
-      'Driver Name'
+      'Salesperson Level',
+      'NSM Name',
+      'RSM Name',
+      'ZSM Name',
+      'ASM Name',
+      'ASO Name',
+      'VP Name'
     ];
 
     const rows = filteredTransactions.map(t => [
@@ -416,9 +443,16 @@ const SPDispatchDetails = () => {
       t.transporterName || '',
       t.driverContact || '',
       t.customerNo || '',
+      t.driverName || '',
       t.salespersonCode || '',
       t.salespersonName || '',
-      t.driverName || ''
+      t.salespersonLevel || '',
+      t.nsmName || '',
+      t.rsmName || '',
+      t.zsmName || '',
+      t.asmName || '',
+      t.asoName || '',
+      t.vpName || ''
     ]);
 
     const csvContent = [headers, ...rows]

@@ -28,7 +28,7 @@ const OrderFilters = ({
     { value: 'month', label: 'This Month' },
     { value: 'quarter', label: 'This Quarter' },
     { value: 'year', label: 'This Year' },    // ← add this
-    { value: 'custom', label: 'Custom Range' }
+    // { value: 'custom', label: 'Custom Range' }
   ];
 
   return (

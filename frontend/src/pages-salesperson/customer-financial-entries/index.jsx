@@ -10,9 +10,12 @@ import PaymentAlerts from './components/PaymentAlerts';
 import StatementGenerator from './components/StatementGenerator';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
-import { useNavigate } from 'react-router-dom';
-// import { getCustomerLedgerEntries, getCustomerByCustomerId, getCurrentMonthInvoiceAmount, getOverdueInvoiceAmount } from 'services/BusinessCentralAPI';
-import { getCustomersByNoList, getSPLedgerEntries, getSPCurrentMonthInvoiceAmount, getSPOverdueInvoiceAmount } from 'services/BusinessCentralAPI';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  getCustomerByNoExpanded,
+  getCustomerLedgerEntriesByCustomerNo,
+  getCustomerOverdueInvoiceAmount
+} from 'services/BusinessCentralAPI';
 
 import CustomDateRangeModal from './components/CustomDateRangeModal';
 
@@ -69,7 +72,7 @@ const getTodayDate = () => {
 
 
 
-const SPFinancialDashboard = () => {
+const SPCustomerFinancialEntries = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionType, setTransactionType] = useState('all');
   const [dateRange, setDateRange] = useState('all');
@@ -91,6 +94,11 @@ const SPFinancialDashboard = () => {
 
   const [creditUtilization, setCreditUtilization] = useState('0%');
   const [assignmentError, setAssignmentError] = useState('');
+
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const selectedCustomerNo = queryParams.get('customerNo') || '';
+  const selectedCustomerName = queryParams.get('customerName') || '';
 
 
   const financialMetrics = [
@@ -182,187 +190,42 @@ const SPFinancialDashboard = () => {
     const fetchLedgerEntries = async () => {
       try {
         setLoading(true);
+        setAssignmentError('');
 
-        const salespersonCode = localStorage.getItem('salespersonCode');
-        const customersForSalesperson = localStorage.getItem('customersForSalesperson');
-        const ASOSalespersons = localStorage.getItem('ASOSalespersons');
-        const effectiveSalespersonCodes = ASOSalespersons?.trim() ? ASOSalespersons : salespersonCode;
-
-        const showAssignmentAlert = (message) => {
-          setAssignmentError(message);
+        if (!selectedCustomerNo) {
+          setAssignmentError('No customer selected. Please go back and select a customer.');
           setAllTransactions([]);
           setFilteredTransactions([]);
-          setCustomerFinancialData({ balanceLCY: 0, creditLimitLCY: 0 });
-          setCurrentMonthAmount(0);
-          setOverdueAmount(0);
-          setCreditUtilization('0%');
-          setLoading(false);
-          // alert(message);
-        };
-
-
-        if (!salespersonCode) {
-          console.error('Salesperson code not found');
-          navigate('/login');
-          return;
-        }
-        if (!ASOSalespersons || ASOSalespersons.trim() === '') {
-          console.error('No ASO salespersons mapped for this salesperson');
-          showAssignmentAlert('No ASO salespersons are mapped to the currently logged-in salesperson. Please contact your administrator.');
           return;
         }
 
-        if (!customersForSalesperson || customersForSalesperson.trim() === '') {
-          console.error('No customers available for this salesperson');
-          showAssignmentAlert('No customers are available for this salesperson. Please contact your administrator.');
-          return;
-        }
+        const ledgerResult = await getCustomerLedgerEntriesByCustomerNo(selectedCustomerNo, { open: true });
 
-        const customerList = parseCustomerList(customersForSalesperson);
-        const customerChunks = chunkArray(customerList, BATCH_SIZE);
-        const customerChunkStrings = customerChunks.map(chunk => chunk.join('|'));
-
-        const { startDate, endDate } = getCurrentMonthDateRange();
-        const today = getTodayDate();
-        console.log('Fetching customer data for month:', startDate, 'to', endDate);
-
-        const customerListPromises = customerChunkStrings.map(chunkStr =>
-          getCustomersByNoList(chunkStr)
-        );
-
-        const ledgerPromises = customerChunkStrings.map(chunkStr =>
-          getSPLedgerEntries(chunkStr, { open: true })
-        );
-
-        const [customerListResults,
-          ledgerResults,
-          // currentMonthResult,
-          overdueResult] = await Promise.all([
-            Promise.all(customerListPromises),
-            Promise.all(ledgerPromises),
-            // getSPCurrentMonthInvoiceAmount(effectiveSalespersonCodes, startDate, endDate),
-            getSPOverdueInvoiceAmount(effectiveSalespersonCodes, today)
-          ]);
-
-        const failedCustomerListResult = customerListResults.find(r => !r?.success);
-        const combinedCustomerList = customerListResults.flatMap(r => r?.data || []);
-
-        if (!failedCustomerListResult && combinedCustomerList.length > 0) {
-          let totalBalanceLCY = 0;
-          let totalCreditLimitLCY = 0;
-
-          combinedCustomerList.forEach(customer => {
-            totalBalanceLCY += customer.balanceLCY || 0;
-            totalCreditLimitLCY += customer.creditLimitLCY || 0;
-          });
-
-          setCustomerFinancialData({
-            balanceLCY: totalBalanceLCY,
-            creditLimitLCY: totalCreditLimitLCY
-          });
-
-          // const utilizationPercentage =
-          //   totalCreditLimitLCY > 0 ? (totalBalanceLCY / totalCreditLimitLCY) * 100 : 0;
-
-          // setCreditUtilization(`${utilizationPercentage.toFixed(1)}%`);
-        } else {
-          console.error('Failed to fetch one or more customer list batches:', failedCustomerListResult?.error);
-          setCustomerFinancialData({ balanceLCY: 0, creditLimitLCY: 0 });
-          // setCreditUtilization('0%');
-        }
-
-        // if (customerResult.success) {
-        //   const customerData = customerResult.data;
-        //   // console.log('Customer financial data:', customerData);
-        //   setCustomerFinancialData(customerData);
-
-        //   const balanceLCY = customerData.balanceLCY || 0;
-        //   const creditLimitLCY = customerData.creditLimitLCY || 0;
-
-        //   // const utilizationPercentage = (balanceLCY / creditLimitLCY) * 100;
-        //   const utilizationPercentage = creditLimitLCY > 0 ? (balanceLCY / creditLimitLCY) * 100 : 0;
-        //   setCreditUtilization(`${utilizationPercentage.toFixed(1)}%`);
-
-        // } else {
-        //   console.error('Failed to fetch customer data:', customerResult.error);
-        // }
-
-
-        // if (currentMonthResult.success) {
-        //   const monthData = currentMonthResult.data;
-        //   // console.log('Current month invoice data:', monthData);
-        //   setCurrentMonthAmount(monthData.amount || 0);
-        // } else {
-        //   console.error('Failed to fetch current month amount:', currentMonthResult.error);
-        //   setCurrentMonthAmount(0);
-        // }
-
-        if (overdueResult.success) {
-          const overdueData = overdueResult.data;
-          // console.log('Overdue invoice data:', overdueData);
-          setOverdueAmount(overdueData.amount || 0);
-        } else {
-          console.error('Failed to fetch overdue amount:', overdueResult.error);
-          setOverdueAmount(0);
-        }
-
-        const failedLedgerResult = ledgerResults.find(r => !r?.success);
-        const combinedLedgerEntries = ledgerResults.flatMap(r => r?.data || []);
-
-        if (!failedLedgerResult) {
-          const mappedTransactions = combinedLedgerEntries.map((entry, index) => {
-            const documentType = entry.documentType?.replace(/_x0020_/g, ' ');
+        if (ledgerResult?.success) {
+          const mappedTransactions = (ledgerResult.data || []).map((entry) => {
+            const documentType = entry.documentType?.replace(/_x0020_/g, ' ') || '';
 
             let type = 'invoice';
-            if (documentType === 'Payment') {
-              type = 'payment';
-            } else if (documentType === 'Credit Memo') {
-              type = 'credit_note';
-            } else if (documentType === 'Finance Charge Memo') {
-              type = 'debit_note';
-            } else if (documentType === 'Invoice') {
-              type = 'invoice';
-            } else if (documentType === 'Order') {
-              type = 'order';
-            }
+            if (documentType === 'Payment') type = 'payment';
+            else if (documentType === 'Credit Memo') type = 'credit_note';
+            else if (documentType === 'Finance Charge Memo') type = 'debit_note';
+            else if (documentType === 'Order') type = 'order';
 
             let status = 'processed';
-            let calculatedDueDate = null;
 
             if (type === 'invoice') {
               const today = new Date();
               today.setHours(0, 0, 0, 0);
 
               if (entry.dueDate) {
-                calculatedDueDate = entry.dueDate;
                 const dueDate = new Date(entry.dueDate);
                 dueDate.setHours(0, 0, 0, 0);
-
-                if (dueDate > today) {
-                  status = 'pending';
-                } else if (dueDate < today) {
-                  status = 'overdue';
-                } else if (dueDate.getTime() === today.getTime()) {
-                  status = 'pending';
-                } else if (dueDate.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000) {
-                  status = 'pending';
-                } else {
-                  status = 'pending';
-                }
-              } else {
-                const dueDate = new Date(entry.postingDate);
-                dueDate.setDate(dueDate.getDate() + 30);
-                calculatedDueDate = dueDate.toISOString().split('T')[0];
-
-                if (dueDate < today) {
-                  status = 'overdue';
-                } else if (dueDate.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000) {
-                  status = 'pending';
-                } else {
-                  status = 'pending';
-                }
+                status = dueDate < today ? 'overdue' : 'pending';
               }
             }
+
+            const customer = entry.customer?.[0] || {};
+            const salesperson = customer.salesperson?.[0] || {};
 
             return {
               id: entry.ledgerEntryNo,
@@ -370,38 +233,36 @@ const SPFinancialDashboard = () => {
               date: entry.postingDate,
               reference: entry.documentNo,
               externalReference: entry.externalDocumentNo || '',
-              amount: Math.abs(entry.amountLCY),
-              status: status,
-              dueDate: entry.dueDate,
+              amount: Math.abs(entry.amountLCY || 0),
+              status,
+              dueDate: entry.dueDate || '',
               paymentMode: type === 'payment' ? 'Bank Transfer' : null,
               originalAmount: entry.originalAmtLCY,
               remainingAmt: entry.remainingAmount,
               remainingAmtLCY: entry.remainingAmtLCY,
               customerNo: entry.customerNo,
-              salespersonCode: entry.salespersonCode,
-              salespersonName: entry.salesperson?.[0]?.name || '',
+              salespersonCode: salesperson.code || '',
+              salespersonName: salesperson.name || '',
             };
           });
 
           setAllTransactions(mappedTransactions);
           setFilteredTransactions(mappedTransactions);
         } else {
-          console.error('Failed to fetch one or more ledger batches:', failedLedgerResult?.error);
-          setAllTransactions(mockTransactions);
-          setFilteredTransactions(mockTransactions);
+          setAllTransactions([]);
+          setFilteredTransactions([]);
         }
       } catch (error) {
-        console.error('Error in fetchLedgerEntries:', error);
-        // Use mock data as fallback
-        setAllTransactions(mockTransactions);
-        setFilteredTransactions(mockTransactions);
+        console.error('Error fetching customer ledger entries:', error);
+        setAllTransactions([]);
+        setFilteredTransactions([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchLedgerEntries();
-  }, [navigate]);
+  }, [selectedCustomerNo]);
 
   useEffect(() => {
     let filtered = [...allTransactions];
@@ -605,7 +466,7 @@ const SPFinancialDashboard = () => {
     return (
       <>
         <Helmet>
-          <title>Financial Dashboard - Veeba Foods Customer Portal</title>
+          <title>Customer Ledger Entries - Veeba Foods Customer Portal</title>
         </Helmet>
         <div className="min-h-screen bg-background">
           <Header />
@@ -626,7 +487,7 @@ const SPFinancialDashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Financial Dashboard - Veeba Food Salesperson Portal</title>
+        <title>Customer Ledger Entries - Veeba Food Salesperson Portal</title>
         <meta name="description" content="View aggregated financial information, outstanding balances, and transaction history for assigned customers" />
       </Helmet>
       <div className="min-h-screen bg-background">
@@ -654,58 +515,30 @@ const SPFinancialDashboard = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
               <div>
                 <h1 className="font-heading font-semibold text-2xl md:text-3xl lg:text-4xl text-foreground mb-2">
-                  Financial Dashboard
+                  Customer Ledger Entries
                 </h1>
                 <p className="font-body text-sm md:text-base text-muted-foreground">
-                  Comprehensive view of your financial transactions and account status
+                  {selectedCustomerName
+                    ? `Transaction history for ${selectedCustomerName} (${selectedCustomerNo})`
+                    : 'Customer transaction history'}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                {/* <Button
-                  variant="outline"
-                  iconName="RefreshCw"
-                  iconPosition="left"
-                  onClick={() => window.location?.reload()}
-                >
-                  Sync ERP
-                </Button>
-                <Button
-                  variant="default"
-                  iconName="CreditCard"
-                  iconPosition="left"
-                  onClick={() => setShowPaymentModal(true)}
-                >
-                  Make Payment
-                </Button> */}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
               {financialMetrics?.map((metric, index) => (
                 <FinancialMetricCard key={index} {...metric} />
               ))}
-            </div>
-
-            {/* <div className="mb-6 md:mb-8">
-              <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 md:p-5 flex items-start gap-3">
-                <Icon name="AlertTriangle" size={24} color="var(--color-warning)" className="flex-shrink-0 mt-1" />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-heading font-semibold text-sm md:text-base text-foreground mb-1">
-                    Credit Limit Alert
-                  </h3>
-                  <p className="font-body text-sm text-muted-foreground">
-                    You have utilized {creditUtilization} of your credit limit.
-                  </p>
-                </div>
-              </div>
             </div> */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 mb-6 md:mb-8">
-              <div className="lg:col-span-10 space-y-6">
+            <div className="grid grid-cols-1 gap-6 md:gap-8 mb-6 md:mb-8">
+              <div className="space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground">
-                      Recent Transactions
+                      Transactions
                     </h2>
                     <Button
                       variant="outline"
@@ -716,114 +549,30 @@ const SPFinancialDashboard = () => {
                       Download All Entries
                     </Button>
                   </div>
+
                   <TransactionFilters
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}
                     transactionType={transactionType}
                     onTypeChange={setTransactionType}
                     dateRange={dateRange}
-                    onDateRangeChange={handleDateRangeChange}  // ✅ CHANGE THIS
+                    onDateRangeChange={handleDateRangeChange}
                     onReset={handleResetFilters}
                   />
+
                   <TransactionsTable
                     transactions={filteredTransactions}
                     onDownloadPDF={handleDownloadPDF}
                     onViewDetails={handleViewDetails}
                   />
                 </div>
-
-                <AgingAnalysisChart data={agingData} />
-              </div>
-
-              <div className="lg:col-span-2 space-y-6">
-                <div>
-                  {/* <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground mb-4">
-                    Payment Alerts
-                  </h2> */}
-                  {/* <PaymentAlerts
-                    alerts={paymentAlerts}
-                    onPayNow={handlePayNow}
-                    onViewDetails={handleViewDetails}
-                  /> */}
-                </div>
-
-                <StatementGenerator onGenerate={handleGenerateStatement} />
               </div>
             </div>
 
-            <div className="bg-card rounded-xl p-6 md:p-8 border border-border shadow-warm-sm">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="bg-primary/10 rounded-lg p-3">
-                  <Icon name="Info" size={24} color="var(--color-primary)" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-heading font-semibold text-base md:text-lg text-foreground mb-2">
-                    Financial Information
-                  </h3>
-                  <p className="font-body text-sm text-muted-foreground mb-4">
-                    All financial data is synchronized in real-time with Business Central ERP. Last sync: {new Date()?.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div className="space-y-3">
-                  <h4 className="font-heading font-medium text-sm text-foreground">Payment Terms</h4>
-                  <div className="space-y-2">
-                    {/* <div className="flex justify-between">
-                      <span className="font-caption text-sm text-muted-foreground">Credit Period</span>
-                      <span className="font-body text-sm text-foreground">30 Days</span>
-                    </div> */}
-
-                    {creditLimit > 0 && (
-                      <div className="flex justify-between">
-                        <span className="font-caption text-sm text-muted-foreground">Credit Limit</span>
-                        <span className="font-body text-sm text-foreground data-text">
-                          ₹{creditLimit.toLocaleString('en-IN', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                          })}
-                        </span>
-                      </div>
-                    )}
-
-                    {creditLimit > 0 && (
-                      <div className="flex justify-between">
-                        <span className="font-caption text-sm text-muted-foreground">Available Credit</span>
-                        <span className="font-body text-sm text-success data-text">
-                          ₹{availableCredit.toLocaleString('en-IN', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                          })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="font-heading font-medium text-sm text-foreground">Account Summary</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="font-caption text-sm text-muted-foreground">Total Invoices (MTD)</span>
-                      <span className="font-body text-sm text-foreground">{totalInvoices}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-caption text-sm text-muted-foreground">Total Payments (MTD)</span>
-                      <span className="font-body text-sm text-foreground">{totalPayments}</span>
-                    </div>
-                    {/* <div className="flex justify-between">
-                      <span className="font-caption text-sm text-muted-foreground">Average Payment Days</span>
-                      <span className="font-body text-sm text-foreground">28 Days</span>
-                    </div> */}
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </main>
       </div>
-      {showPaymentModal && (
+      {/* {showPaymentModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-card rounded-xl max-w-md w-full p-6 shadow-warm-xl animate-slide-in">
             <div className="flex items-center justify-between mb-6">
@@ -884,7 +633,7 @@ const SPFinancialDashboard = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {showCustomDateModal && (
         <CustomDateRangeModal
@@ -897,4 +646,4 @@ const SPFinancialDashboard = () => {
   );
 };
 
-export default SPFinancialDashboard;
+export default SPCustomerFinancialEntries;

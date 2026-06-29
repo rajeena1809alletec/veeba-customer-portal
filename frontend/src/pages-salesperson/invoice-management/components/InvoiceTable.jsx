@@ -131,16 +131,37 @@ const InvoiceTable = ({ invoices }) => {
                   Customer No
                 </th>
                 <th className="px-4 py-3 text-left font-caption font-semibold text-sm text-foreground">
-                  Salesperson Code
-                </th>
-                <th className="px-4 py-3 text-left font-caption font-semibold text-sm text-foreground">
-                  Salesperson Name
-                </th>
-                <th className="px-4 py-3 text-left font-caption font-semibold text-sm text-foreground">
                   Date
                 </th>
                 <th className="px-4 py-3 text-right font-caption font-semibold text-sm text-foreground">
                   Amount
+                </th>
+                {/* <th className="px-4 py-3 text-left font-caption font-semibold text-sm text-foreground">
+                  Salesperson Code
+                </th> */}
+                <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                  Salesperson Name
+                </th>
+                <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                  Salesperson Level
+                </th>
+                <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                  NSM Name
+                </th>
+                <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                  RSM Name
+                </th>
+                <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                  ZSM Name
+                </th>
+                <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                  ASM Name
+                </th>
+                <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                  ASO Name
+                </th>
+                <th className="px-4 py-3 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
+                  VP Name
                 </th>
                 <th className="px-4 py-3 text-center font-caption font-semibold text-sm text-foreground">
                   Actions
@@ -150,12 +171,6 @@ const InvoiceTable = ({ invoices }) => {
             <tbody className="divide-y divide-border">
               {invoices?.map((invoice) => (
                 <tr key={invoice?.id} className="hover:bg-muted/30 transition-smooth">
-                  {/* <td className="px-4 py-4">
-                    <Checkbox
-                      checked={selectedInvoices?.includes(invoice?.id)}
-                      onChange={() => onSelectInvoice(invoice?.id)}
-                    />
-                  </td> */}
                   <td className="px-4 py-4">
                     <div className="flex flex-col gap-1">
                       <button
@@ -167,44 +182,83 @@ const InvoiceTable = ({ invoices }) => {
                       {getTypeBadge(invoice?.type)}
                     </div>
                   </td>
+
                   <td className="px-4 py-4">
                     <span className="font-caption text-sm text-foreground">
                       {invoice?.orderRef}
                     </span>
                   </td>
+
                   <td className="px-4 py-4">
                     <span className="font-caption text-sm text-foreground">
                       {invoice?.customerNo || '-'}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
+                  {/* <td className="px-4 py-4">
                     <span className="font-caption text-sm text-foreground">
                       {invoice?.salespersonCode || '-'}
                     </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="font-caption text-sm text-foreground">
-                      {invoice?.salespersonName || '-'}
-                    </span>
-                  </td>
+                  </td> */}
                   <td className="px-4 py-4">
                     <span className="font-caption text-sm text-muted-foreground">
                       {formatDate(invoice?.date)}
                     </span>
                   </td>
+
                   <td className="px-4 py-4 text-right">
                     <span className="font-data font-semibold text-sm text-foreground">
                       ₹{invoice?.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </td>
-                  {/* <td className="px-4 py-4 text-right">
-                    <span className="font-data text-sm text-muted-foreground">
-                      ₹{invoice?.gst?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {invoice?.salespersonName || '-'}
                     </span>
-                  </td> */}
-                  {/* <td className="px-4 py-4 text-center">
-                    {getStatusBadge(invoice?.status)}
-                  </td> */}
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {invoice?.salespersonLevel || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {invoice?.nsmName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {invoice?.rsmName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {invoice?.zsmName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {invoice?.asmName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {invoice?.asoName || '-'}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <span className="font-caption text-sm text-foreground">
+                      {invoice?.vpName || '-'}
+                    </span>
+                  </td>
+
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-center gap-2">
                       <button
@@ -214,29 +268,6 @@ const InvoiceTable = ({ invoices }) => {
                       >
                         <Icon name="Eye" size={18} color="var(--color-muted-foreground)" />
                       </button>
-                      {/* <button
-                        onClick={() => handleDownload(invoice)}
-                        className="p-2 rounded-lg hover:bg-muted transition-smooth"
-                        title="Download PDF"
-                      >
-                        <Icon name="Download" size={18} color="var(--color-primary)" />
-                      </button> */}
-                      {/* {invoice?.status !== 'paid' && (
-                        <button
-                          onClick={() => handlePayment(invoice)}
-                          className="p-2 rounded-lg hover:bg-muted transition-smooth"
-                          title="Make Payment"
-                        >
-                          <Icon name="CreditCard" size={18} color="var(--color-success)" />
-                        </button>
-                      )} */}
-                      {/* <button
-                        onClick={() => handleDispute(invoice)}
-                        className="p-2 rounded-lg hover:bg-muted transition-smooth"
-                        title="Raise Dispute"
-                      >
-                        <Icon name="AlertTriangle" size={18} color="var(--color-warning)" />
-                      </button> */}
                     </div>
                   </td>
                 </tr>
@@ -273,13 +304,47 @@ const InvoiceTable = ({ invoices }) => {
                       <span className="text-muted-foreground">Customer No:</span>
                       <span className="font-caption text-foreground">{invoice?.customerNo || '-'}</span>
                     </div>
-                    <div className="flex items-center justify-between">
+                    {/* <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Salesperson Code:</span>
                       <span className="font-caption text-foreground">{invoice?.salespersonCode || '-'}</span>
-                    </div>
+                    </div> */}
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Salesperson Name:</span>
                       <span className="font-caption text-foreground">{invoice?.salespersonName || '-'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Salesperson Level:</span>
+                      <span className="font-caption text-foreground">{invoice?.salespersonLevel || '-'}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">NSM Name:</span>
+                      <span className="font-caption text-foreground">{invoice?.nsmName || '-'}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">RSM Name:</span>
+                      <span className="font-caption text-foreground">{invoice?.rsmName || '-'}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">ZSM Name:</span>
+                      <span className="font-caption text-foreground">{invoice?.zsmName || '-'}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">ASM Name:</span>
+                      <span className="font-caption text-foreground">{invoice?.asmName || '-'}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">ASO Name:</span>
+                      <span className="font-caption text-foreground">{invoice?.asoName || '-'}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">VP Name:</span>
+                      <span className="font-caption text-foreground">{invoice?.vpName || '-'}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Date:</span>

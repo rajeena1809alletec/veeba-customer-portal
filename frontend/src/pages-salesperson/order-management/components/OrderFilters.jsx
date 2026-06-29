@@ -13,10 +13,11 @@ const OrderFilters = ({
 }) => {
   const statusOptions = [
     { value: 'all', label: 'All Status' },
-    { value: 'open', label: 'Open' },
-    { value: 'released', label: 'Released' },
-    { value: 'pending approval', label: 'Pending Approval' },
+    { value: 'order in process', label: 'Order In Process' },
     { value: 'blocked', label: 'Blocked' },
+    // { value: 'open', label: 'Open' },
+    // { value: 'released', label: 'Released' },
+    // { value: 'pending approval', label: 'Pending Approval' },
     // { value: 'dispatched', label: 'Dispatched' },
     // { value: 'invoiced', label: 'Invoiced' },
     // { value: 'cancelled', label: 'Cancelled' }
@@ -29,7 +30,7 @@ const OrderFilters = ({
     { value: 'month', label: 'This Month' },
     { value: 'quarter', label: 'This Quarter' },
     { value: 'year', label: 'This Year' },    // ← add this
-    { value: 'custom', label: 'Custom Range' }
+    // { value: 'custom', label: 'Custom Range' }
   ];
 
   return (

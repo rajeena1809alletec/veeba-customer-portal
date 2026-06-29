@@ -47,12 +47,12 @@ const mapStatus = (bcStatus, clBlock) => {
 
   const s = (bcStatus || '').toLowerCase().replace(/_x0020_/g, ' ').trim();
 
-  if (s === 'released') return 'open';
-  if (s === 'open') return 'open';
+  if (s === 'released') return 'order in process';
+  if (s === 'open') return 'order in process';
   if (s === 'pending approval') return 'pending approval';
   if (s === 'pending prepayment') return 'pending prepayment';
 
-  return 'open';
+  return 'order in process';
 };
 
 const getCurrentMonthDateRange = () => {
@@ -167,23 +167,34 @@ const SPOrderManagement = () => {
         if (!failedOrderResult) {
           const combinedOrderData = orderResults.flatMap(r => r?.data || []);
 
-          const mapped = combinedOrderData.map((entry) => ({
-            id: entry.no,
-            orderNumber: entry.no,
-            orderDate: entry.postingDate || '',
-            totalAmount: entry.amount || 0,
-            status: mapStatus(entry.status, entry.clBlock),
-            bcStatus: (entry.status || '').toLowerCase().replace(/_x0020_/g, ' ').trim(),
-            clBlock: entry.clBlock === true,
-            deliveryDate: entry.requestedDeliveryDate || '',
-            documentType: entry.documentType,
-            postingDate: entry.postingDate || '',
-            items: [],
-            trackingInfo: null,
-            customerNo: entry.sellToCustomerNo || '',
-            salespersonCode: entry.salespersonCode || '',
-            salespersonName: entry.salesperson?.[0]?.name || ''
-          }));
+          const mapped = combinedOrderData.map((entry) => {
+            const salesperson = entry.customer?.[0]?.salesperson?.[0] || {};
+
+            return {
+              id: entry.no,
+              orderNumber: entry.no,
+              orderDate: entry.postingDate || '',
+              totalAmount: entry.amount || 0,
+              status: mapStatus(entry.status, entry.clBlock),
+              bcStatus: (entry.status || '').toLowerCase().replace(/_x0020_/g, ' ').trim(),
+              clBlock: entry.clBlock === true,
+              deliveryDate: entry.requestedDeliveryDate || '',
+              documentType: entry.documentType,
+              postingDate: entry.postingDate || '',
+              items: [],
+              trackingInfo: null,
+              customerNo: entry.sellToCustomerNo || '',
+              salespersonCode: salesperson.code || '',
+              salespersonName: salesperson.name || '',
+              salespersonLevel: salesperson.level || '',
+              nsmName: salesperson.salespersonsHierarchyNSM?.[0]?.name || '',
+              rsmName: salesperson.salespersonsHierarchyRSM?.[0]?.name || '',
+              zsmName: salesperson.salespersonsHierarchyZSM?.[0]?.name || '',
+              asmName: salesperson.salespersonsHierarchyASM?.[0]?.name || '',
+              asoName: salesperson.salespersonsHierarchyASO?.[0]?.name || '',
+              vpName: salesperson.salespersonsHierarchyVP?.[0]?.name || ''
+            };
+          });
           const filteredMapped = mapped.filter(
             order => !(order.bcStatus?.toLowerCase() === 'open' && order.clBlock === false)
           );
@@ -379,13 +390,21 @@ const SPOrderManagement = () => {
 
   useEffect(() => {
     let filtered = [...allOrders];
+    const searchLower = filters?.search?.toLowerCase()?.trim();
 
-    if (filters?.search) {
+    if (searchLower) {
       filtered = filtered.filter(order =>
-        order?.orderNumber?.toLowerCase()?.includes(filters?.search?.toLowerCase()) ||
-        order?.customerNo?.toLowerCase()?.includes(filters?.search?.toLowerCase()) ||
-        order?.salespersonCode?.toLowerCase()?.includes(filters?.search?.toLowerCase()) ||
-        order?.salespersonName?.toLowerCase()?.includes(filters?.search?.toLowerCase())
+        order?.orderNumber?.toLowerCase()?.includes(searchLower) ||
+        order?.customerNo?.toLowerCase()?.includes(searchLower) ||
+        order?.salespersonCode?.toLowerCase()?.includes(searchLower) ||
+        order?.salespersonName?.toLowerCase()?.includes(searchLower) ||
+        order?.salespersonLevel?.toLowerCase()?.includes(searchLower) ||
+        order?.nsmName?.toLowerCase()?.includes(searchLower) ||
+        order?.rsmName?.toLowerCase()?.includes(searchLower) ||
+        order?.zsmName?.toLowerCase()?.includes(searchLower) ||
+        order?.asmName?.toLowerCase()?.includes(searchLower) ||
+        order?.asoName?.toLowerCase()?.includes(searchLower) ||
+        order?.vpName?.toLowerCase()?.includes(searchLower)
       );
     }
 
@@ -488,9 +507,9 @@ const SPOrderManagement = () => {
     totalOrders: allOrders?.length || 0,
     totalOrdersAmount: allOrders?.reduce((sum, order) => sum + (order?.totalAmount || 0), 0) || 0,
 
-    openOrders: allOrders?.filter(o => o?.status === 'open')?.length || 0,
+    openOrders: allOrders?.filter(o => o?.status === 'order in process')?.length || 0,
     openOrdersAmount: allOrders
-      ?.filter(o => o?.status === 'open')
+      ?.filter(o => o?.status === 'order in process')
       ?.reduce((sum, order) => sum + (order?.totalAmount || 0), 0) || 0,
 
     blockedOrders: allOrders?.filter(o => o?.status === 'blocked')?.length || 0,
@@ -557,27 +576,39 @@ const SPOrderManagement = () => {
     const headers = [
       'Order Number',
       'Customer No',
-      'Salesperson Code',
-      'Salesperson Name',
       'Order Date',
       'Delivery Date',
       'Status',
-      'BC Status',
       'Total Amount',
-      'Document Type'
+      'Document Type',
+      'Salesperson Code',
+      'Salesperson Name',
+      'Salesperson Level',
+      'NSM Name',
+      'RSM Name',
+      'ZSM Name',
+      'ASM Name',
+      'ASO Name',
+      'VP Name'
     ];
 
     const rows = filteredOrders.map(order => [
       order?.orderNumber || '',
       order?.customerNo || '',
-      order?.salespersonCode || '',
-      order?.salespersonName || '',
       order?.orderDate || '',
       order?.deliveryDate || '',
       order?.status || '',
-      order?.bcStatus || '',
       order?.totalAmount !== undefined ? Number(order.totalAmount).toFixed(2) : '0.00',
-      order?.documentType || ''
+      order?.documentType || '',
+      order?.salespersonCode || '',
+      order?.salespersonName || '',
+      order?.salespersonLevel || '',
+      order?.nsmName || '',
+      order?.rsmName || '',
+      order?.zsmName || '',
+      order?.asmName || '',
+      order?.asoName || '',
+      order?.vpName || ''
     ]);
 
     const csvContent = [headers, ...rows]
@@ -659,7 +690,8 @@ const SPOrderManagement = () => {
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 onClearFilters={handleClearFilters}
-                resultsCount={filteredOrders?.length} customDateRange={customDateRange}
+                resultsCount={filteredOrders?.length}
+              // customDateRange={customDateRange}
               />
 
               {showMobileView ? (

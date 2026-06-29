@@ -48,6 +48,9 @@ const Breadcrumb = () => {
 
     'dispatch-details': 'Dispatch',
     'sp-dispatch-details': 'Dispatch',
+
+    'sp-customers': 'Customers',
+    'sp-customer-financial-entries': 'Customer Financial Entries',
   };
 
   if (pathnames?.length === 0 || location?.pathname === '/login') {

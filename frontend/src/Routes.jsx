@@ -25,7 +25,8 @@ import SPComplaintManagement from './pages-salesperson/complaint-management';
 import SPFinancialDashboard from './pages-salesperson/financial-dashboard';
 import SPOrderDetails from './pages-salesperson/order-details';
 import SPDispatchDetails from './pages-salesperson/dispatch-details';
-
+import SPCustomers from "pages-salesperson/customers";
+import SPCustomerFinancialEntries from "pages-salesperson/customer-financial-entries";
 const Routes = () => {
   return (
     <BrowserRouter>
@@ -56,6 +57,8 @@ const Routes = () => {
           <Route path="/sp-financial-dashboard" element={<SPFinancialDashboard />} />
           <Route path="/sp-order-details" element={<SPOrderDetails />} />
           <Route path="/sp-dispatch-details" element={<SPDispatchDetails />} />
+          <Route path="/sp-customers" element={<SPCustomers />} />
+          <Route path="/sp-customer-financial-entries" element={<SPCustomerFinancialEntries />} />
 
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>

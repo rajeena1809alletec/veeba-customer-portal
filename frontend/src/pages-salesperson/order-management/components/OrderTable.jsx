@@ -29,6 +29,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
           <thead className="bg-muted/50">
             <tr>
               <th className="w-12 px-4 py-4"></th>
+
               <th className="px-4 py-4 text-left">
                 <button
                   onClick={() => handleSort('orderNumber')}
@@ -38,6 +39,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
                   <SortIcon field="orderNumber" />
                 </button>
               </th>
+
               <th className="px-4 py-4 text-left">
                 <button
                   onClick={() => handleSort('customerNo')}
@@ -47,24 +49,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
                   <SortIcon field="customerNo" />
                 </button>
               </th>
-              <th className="px-4 py-4 text-left">
-                <button
-                  onClick={() => handleSort('salespersonCode')}
-                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
-                >
-                  Salesperson Code
-                  <SortIcon field="salespersonCode" />
-                </button>
-              </th>
-              <th className="px-4 py-4 text-left">
-                <button
-                  onClick={() => handleSort('salespersonName')}
-                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
-                >
-                  Salesperson Name
-                  <SortIcon field="salespersonName" />
-                </button>
-              </th>
+
               <th className="px-4 py-4 text-left">
                 <button
                   onClick={() => handleSort('orderDate')}
@@ -74,6 +59,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
                   <SortIcon field="orderDate" />
                 </button>
               </th>
+
               <th className="px-4 py-4 text-left">
                 <button
                   onClick={() => handleSort('totalAmount')}
@@ -83,6 +69,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
                   <SortIcon field="totalAmount" />
                 </button>
               </th>
+
               <th className="px-4 py-4 text-left">
                 <button
                   onClick={() => handleSort('status')}
@@ -92,6 +79,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
                   <SortIcon field="status" />
                 </button>
               </th>
+
               <th className="px-4 py-4 text-left">
                 <button
                   onClick={() => handleSort('deliveryDate')}
@@ -101,6 +89,97 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
                   <SortIcon field="deliveryDate" />
                 </button>
               </th>
+
+              {/* <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('salespersonCode')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Salesperson Code
+                  <SortIcon field="salespersonCode" />
+                </button>
+              </th> */}
+
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('salespersonName')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Salesperson Name
+                  <SortIcon field="salespersonName" />
+                </button>
+              </th>
+
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('salespersonLevel')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Level
+                  <SortIcon field="salespersonLevel" />
+                </button>
+              </th>
+
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('nsmCode')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  NSM Name
+                  <SortIcon field="nsmCode" />
+                </button>
+              </th>
+
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('rsmCode')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  RSM Name
+                  <SortIcon field="rsmCode" />
+                </button>
+              </th>
+
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('zsmCode')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  ZSM Name
+                  <SortIcon field="zsmCode" />
+                </button>
+              </th>
+
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('asmCode')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  ASM Name
+                  <SortIcon field="asmCode" />
+                </button>
+              </th>
+
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('asoCode')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  ASO Name
+                  <SortIcon field="asoCode" />
+                </button>
+              </th>
+
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('vpCode')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  VP Name
+                  <SortIcon field="vpCode" />
+                </button>
+              </th>
+
               <th className="px-4 py-4 text-left font-caption text-xs font-medium text-muted-foreground uppercase">
                 Actions
               </th>
@@ -117,7 +196,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
               ))
             ) : (
               <tr>
-                <td colSpan="10" className="px-4 py-12 text-center">
+                <td colSpan="17" className="px-4 py-12 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                       <Icon name="ShoppingCart" size={32} color="var(--color-muted-foreground)" />
