@@ -363,6 +363,8 @@ const SPFinancialDashboard = () => {
                 }
               }
             }
+            // const customer = entry.customer?.[0] || {};
+            const salesperson = entry.customer?.[0].salesperson?.[0] || {};
 
             return {
               id: entry.ledgerEntryNo,
@@ -378,8 +380,8 @@ const SPFinancialDashboard = () => {
               remainingAmt: entry.remainingAmount,
               remainingAmtLCY: entry.remainingAmtLCY,
               customerNo: entry.customerNo,
-              salespersonCode: entry.salespersonCode,
-              salespersonName: entry.salesperson?.[0]?.name || '',
+              salespersonCode: salesperson.code || '',
+              salespersonName: salesperson.name || '',
             };
           });
 
@@ -701,7 +703,7 @@ const SPFinancialDashboard = () => {
             </div> */}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 mb-6 md:mb-8">
-              <div className="lg:col-span-10 space-y-6">
+              <div className="lg:col-span-12 space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground">
@@ -735,20 +737,20 @@ const SPFinancialDashboard = () => {
                 <AgingAnalysisChart data={agingData} />
               </div>
 
-              <div className="lg:col-span-2 space-y-6">
+              {/* <div className="lg:col-span-2 space-y-6">
                 <div>
-                  {/* <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground mb-4">
+                  <h2 className="font-heading font-semibold text-lg md:text-xl text-foreground mb-4">
                     Payment Alerts
-                  </h2> */}
-                  {/* <PaymentAlerts
+                  </h2>
+                  <PaymentAlerts
                     alerts={paymentAlerts}
                     onPayNow={handlePayNow}
                     onViewDetails={handleViewDetails}
-                  /> */}
+                  />
                 </div>
 
                 <StatementGenerator onGenerate={handleGenerateStatement} />
-              </div>
+              </div> */}
             </div>
 
             <div className="bg-card rounded-xl p-6 md:p-8 border border-border shadow-warm-sm">

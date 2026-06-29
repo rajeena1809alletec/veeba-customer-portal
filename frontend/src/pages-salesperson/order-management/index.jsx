@@ -184,6 +184,9 @@ const SPOrderManagement = () => {
               items: [],
               trackingInfo: null,
               customerNo: entry.sellToCustomerNo || '',
+              customerName: entry.customer?.[0].name || '',
+              customerCity: entry.customer?.[0].billingCity || '',
+              customerState: entry.customer?.[0].billingState || '',
               salespersonCode: salesperson.code || '',
               salespersonName: salesperson.name || '',
               salespersonLevel: salesperson.level || '',
@@ -396,6 +399,9 @@ const SPOrderManagement = () => {
       filtered = filtered.filter(order =>
         order?.orderNumber?.toLowerCase()?.includes(searchLower) ||
         order?.customerNo?.toLowerCase()?.includes(searchLower) ||
+        order?.customerName?.toLowerCase()?.includes(searchLower) ||
+        order?.city?.toLowerCase()?.includes(searchLower) ||
+        order?.state?.toLowerCase()?.includes(searchLower) ||
         order?.salespersonCode?.toLowerCase()?.includes(searchLower) ||
         order?.salespersonName?.toLowerCase()?.includes(searchLower) ||
         order?.salespersonLevel?.toLowerCase()?.includes(searchLower) ||
@@ -576,6 +582,9 @@ const SPOrderManagement = () => {
     const headers = [
       'Order Number',
       'Customer No',
+      'Customer Name',
+      'Customer City',
+      'Customer State',
       'Order Date',
       'Delivery Date',
       'Status',
@@ -595,6 +604,9 @@ const SPOrderManagement = () => {
     const rows = filteredOrders.map(order => [
       order?.orderNumber || '',
       order?.customerNo || '',
+      order?.customerName || '',
+      order?.customerCity || '',
+      order?.customerState || '',
       order?.orderDate || '',
       order?.deliveryDate || '',
       order?.status || '',

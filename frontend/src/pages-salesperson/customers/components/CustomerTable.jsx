@@ -56,7 +56,8 @@ const CustomersTable = ({ customers = [], onViewDetails }) => {
 
   return (
     <>
-      <div className="hidden xl:block overflow-x-auto rounded-lg border border-border bg-card">
+      {/* <div className="hidden xl:block overflow-x-auto rounded-lg border border-border bg-card"> */}
+      <div className="overflow-x-auto rounded-lg border border-border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
@@ -79,9 +80,6 @@ const CustomersTable = ({ customers = [], onViewDetails }) => {
                   <SortIcon columnKey="name" />
                 </div>
               </th>
-
-              <th className="px-4 py-3 text-left font-semibold text-foreground">Contact Name</th>
-              <th className="px-4 py-3 text-left font-semibold text-foreground">E-mail ID</th>
 
               <th
                 className="px-4 py-3 text-left font-semibold text-foreground cursor-pointer"
@@ -224,6 +222,8 @@ const CustomersTable = ({ customers = [], onViewDetails }) => {
                   <SortIcon columnKey="vpName" />
                 </div>
               </th>
+              <th className="px-4 py-3 text-left font-semibold text-foreground">Contact Name</th>
+              <th className="px-4 py-3 text-left font-semibold text-foreground">E-mail ID</th>
 
               <th className="px-4 py-3 text-center font-semibold text-foreground">Actions</th>
             </tr>
@@ -249,8 +249,6 @@ const CustomersTable = ({ customers = [], onViewDetails }) => {
                     </button>
                   </td>
                   <td className="px-4 py-3 text-foreground font-medium">{customer.name || '-'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{customer.contactName || '-'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{customer.email || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{customer.city || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{customer.state || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{customer.paymentTermCode || '-'}</td>
@@ -268,6 +266,8 @@ const CustomersTable = ({ customers = [], onViewDetails }) => {
                   <td className="px-4 py-3 text-muted-foreground">{customer.asmName || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{customer.asoName || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{customer.vpName || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{customer.contactName || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{customer.email || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <button
                       type="button"

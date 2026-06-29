@@ -94,7 +94,7 @@ const InvoicePreviewModal = ({ invoice, loading, onClose }) => {
 
   //     autoTable(pdf, {
   //       startY: y,
-  //       head: [['Item Code', 'Qty', 'Rate', 'Item Description', 'GST Code', 'HSN', 'Amount']],
+  //      head: [['Item Code', 'Item Description', 'Qty', 'Rate', 'GST Code', 'HSN', 'Amount']],
   //       body: rows,
   //       styles: {
   //         fontSize: 8,
@@ -279,14 +279,14 @@ const InvoicePreviewModal = ({ invoice, loading, onClose }) => {
                           <th className="px-4 py-3 text-left font-caption font-semibold text-sm text-foreground">
                             Item Code
                           </th>
+                          <th className="px-4 py-3 text-left font-caption font-semibold text-sm text-foreground">
+                            Item Description
+                          </th>
                           <th className="px-4 py-3 text-right font-caption font-semibold text-sm text-foreground">
                             Qty
                           </th>
                           <th className="px-4 py-3 text-right font-caption font-semibold text-sm text-foreground">
                             Rate
-                          </th>
-                          <th className="px-4 py-3 text-left font-caption font-semibold text-sm text-foreground">
-                            Item Description
                           </th>
                           <th className="px-4 py-3 text-left font-caption font-semibold text-sm text-foreground">
                             GST Code
@@ -306,6 +306,9 @@ const InvoicePreviewModal = ({ invoice, loading, onClose }) => {
                               <td className="px-4 py-3 font-data text-sm text-foreground">
                                 {line?.itemNo || '-'}
                               </td>
+                              <td className="px-4 py-3 font-caption text-sm text-foreground">
+                                {line?.description || '-'}
+                              </td>
                               <td className="px-4 py-3 text-right font-data text-sm text-foreground">
                                 {Number(line?.quantity || 0).toLocaleString('en-IN')}
                               </td>
@@ -314,9 +317,6 @@ const InvoicePreviewModal = ({ invoice, loading, onClose }) => {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2
                                 })}
-                              </td>
-                              <td className="px-4 py-3 font-caption text-sm text-foreground">
-                                {line?.description || '-'}
                               </td>
                               <td className="px-4 py-3 font-data text-sm text-foreground">
                                 {line?.gstGroupCode || '-'}

@@ -799,7 +799,7 @@ export const getSPLedgerEntries = async (customersForSalesperson, filters = {}) 
         if (filters.top) {
             queryParams += `&$top=${filters.top}`;
         }
-        queryParams += '&$expand=salesperson';
+        queryParams += '&$expand=customer($expand=salesperson($expand=salespersonsHierarchyNSM,salespersonsHierarchyRSM,salespersonsHierarchyZSM,salespersonsHierarchyASM,salespersonsHierarchyASO,salespersonsHierarchyVP))';
 
 
         console.log('getSPLedgerEntries URL: ', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerLedgerEntries?${queryParams}`);

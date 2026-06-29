@@ -49,7 +49,34 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
                   <SortIcon field="customerNo" />
                 </button>
               </th>
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('customerName')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Customer Name
+                  <SortIcon field="customerName" />
+                </button>
+              </th>
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('city')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Customer City
+                  <SortIcon field="city" />
+                </button>
+              </th>
 
+              <th className="px-4 py-4 text-left">
+                <button
+                  onClick={() => handleSort('state')}
+                  className="flex items-center gap-2 font-caption text-xs font-medium text-muted-foreground uppercase hover:text-foreground transition-smooth"
+                >
+                  Customer State
+                  <SortIcon field="state" />
+                </button>
+              </th>
               <th className="px-4 py-4 text-left">
                 <button
                   onClick={() => handleSort('orderDate')}
@@ -196,7 +223,7 @@ const OrderTable = ({ orders, onRepeatOrder, onSort, sortConfig }) => {
               ))
             ) : (
               <tr>
-                <td colSpan="17" className="px-4 py-12 text-center">
+                <td colSpan="20" className="px-4 py-12 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                       <Icon name="ShoppingCart" size={32} color="var(--color-muted-foreground)" />

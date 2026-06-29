@@ -45,6 +45,22 @@ const OrderTableRow = ({ order, onRepeatOrder }) => {
             {order?.customerNo || '-'}
           </span>
         </td>
+        <td className="px-4 py-4">
+          <span className="font-body text-sm text-foreground">
+            {order?.customerName || '-'}
+          </span>
+        </td>
+        <td className="px-4 py-4">
+          <span className="font-caption text-sm text-foreground">
+            {order?.customerCity || '-'}
+          </span>
+        </td>
+
+        <td className="px-4 py-4">
+          <span className="font-caption text-sm text-foreground">
+            {order?.customerState || '-'}
+          </span>
+        </td>
 
         <td className="px-4 py-4">
           <span className="font-caption text-sm text-foreground">

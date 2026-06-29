@@ -241,6 +241,7 @@ const SPCustomerFinancialEntries = () => {
               remainingAmt: entry.remainingAmount,
               remainingAmtLCY: entry.remainingAmtLCY,
               customerNo: entry.customerNo,
+              customerName: customer.name,
               salespersonCode: salesperson.code || '',
               salespersonName: salesperson.name || '',
             };
@@ -400,27 +401,48 @@ const SPCustomerFinancialEntries = () => {
       'Date',
       'Reference',
       'Customer No',
-      'Salesperson Code',
-      'Salesperson Name',
       'Amount',
       'Remaining Amount',
       'Status',
-      'Due Date'
+      'Due Date',
+      'Salesperson Code',
+      'Salesperson Name'
     ];
+    const totalAmount = filteredTransactions.reduce(
+      (sum, t) => sum + Number(t.amount || 0),
+      0
+    );
+
+    const totalRemainingAmount = filteredTransactions.reduce(
+      (sum, t) => sum + Math.abs(Number(t.remainingAmtLCY || 0)),
+      0
+    );
     const rows = filteredTransactions.map(t => [
       t.type || '',
       t.date || '',
       t.reference || '',
       t.customerNo || '',
-      t.salespersonCode || '',
-      t.salespersonName || '',
       t.amount?.toFixed(2) || '0.00',
       t.remainingAmtLCY !== undefined ? Math.abs(t.remainingAmtLCY).toFixed(2) : '0.00',
       t.status || '',
-      t.dueDate || ''
+      t.dueDate || '',
+      t.salespersonCode || '',
+      t.salespersonName || '',
     ]);
+    const totalRow = [
+      'TOTAL',
+      '',
+      '',
+      '',
+      totalAmount.toFixed(2),
+      totalRemainingAmount.toFixed(2),
+      '',
+      '',
+      '',
+      ''
+    ];
 
-    const csvContent = [headers, ...rows]
+    const csvContent = [headers, ...rows, totalRow]
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
 

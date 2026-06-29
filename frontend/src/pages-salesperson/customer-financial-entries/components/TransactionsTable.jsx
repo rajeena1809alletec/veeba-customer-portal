@@ -112,23 +112,10 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                     name={sortConfig?.key === 'customerNo' ? sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown' : 'ChevronsUpDown'} size={16} />
                 </div>
               </th>
-              <th
-                className="text-left p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
-                onClick={() => handleSort('salespersonCode')}
-              >
-                <div className="flex items-center gap-2">
-                  Salesperson Code
-                  <Icon
-                    name={sortConfig?.key === 'salespersonCode' ? sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown' : 'ChevronsUpDown'} size={16} />
-                  {/* <Icon
-                    name={sortConfig?.key === 'salespersonCode' && sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown'}
-                    size={16}
-                  /> */}
-                </div>
-              </th>
               <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
-                Salesperson Name
+                Customer Name
               </th>
+
               <th
                 className="text-right p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
                 onClick={() => handleSort('amount')}
@@ -153,6 +140,23 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                     size={16}
                   />
                 </div>
+              </th>
+              <th
+                className="text-left p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
+                onClick={() => handleSort('salespersonCode')}
+              >
+                <div className="flex items-center gap-2">
+                  Salesperson Code
+                  <Icon
+                    name={sortConfig?.key === 'salespersonCode' ? sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown' : 'ChevronsUpDown'} size={16} />
+                  {/* <Icon
+                    name={sortConfig?.key === 'salespersonCode' && sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown'}
+                    size={16}
+                  /> */}
+                </div>
+              </th>
+              <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
+                Salesperson Name
               </th>
               {/* <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
                 Status
@@ -211,14 +215,10 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                 </td>
                 <td className="p-4">
                   <span className="font-caption text-sm text-foreground data-text">
-                    {transaction?.salespersonCode || '—'}
+                    {transaction?.customerName || '—'}
                   </span>
                 </td>
-                <td className="p-4">
-                  <span className="font-caption text-sm text-foreground data-text">
-                    {transaction?.salespersonName || '—'}
-                  </span>
-                </td>
+
                 <td className="p-4 text-right">
                   <span className="font-body text-sm font-semibold text-foreground data-text">
                     ₹{transaction?.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -232,6 +232,17 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                       ? `₹${Math.abs(transaction.remainingAmt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       : '-'
                     }
+                  </span>
+                </td>
+                <td className="p-4">
+                  <span className="font-caption text-sm text-foreground data-text">
+                    {transaction?.salespersonCode || '—'}
+                  </span>
+                </td>
+
+                <td className="p-4">
+                  <span className="font-caption text-sm text-foreground data-text">
+                    {transaction?.salespersonName || '—'}
                   </span>
                 </td>
                 {/* <td className="p-4">

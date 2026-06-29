@@ -7,7 +7,8 @@ import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import CustomerFilters from './components/CustomerFilters';
 import CustomersTable from './components/CustomerTable';
-import { getCustomersByNoListExpanded } from 'services/BusinessCentralAPI';
+import { getCustomersByNoListExpanded, getSPOverdueInvoiceAmount } from 'services/BusinessCentralAPI';
+import FinancialMetricCard from './components/FinancialMetricCard';
 const BATCH_SIZE = 90;
 
 const parseCustomerList = (customersForSalesperson) => {
@@ -28,17 +29,48 @@ const chunkArray = (arr, size) => {
   }
   return chunks;
 };
+const getTodayDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 
 const SPCustomers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [allCustomers, setAllCustomers] = useState([]);
+  const [totalOutstanding, setTotalOutstanding] = useState(0);
+  const [totalOverdueAmount, setTotalOverdueAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const mockTransactions = [];
-
+  const financialMetrics = [
+    {
+      title: 'Total Outstanding',
+      amount: `₹${totalOutstanding.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`,
+      icon: 'Wallet',
+      iconColor: 'var(--color-error)',
+      bgColor: 'bg-error/10',
+      subtitle: 'Across all customers'
+    },
+    {
+      title: 'Overdue Amount',
+      amount: `₹${Math.abs(totalOverdueAmount).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`,
+      icon: 'AlertCircle',
+      iconColor: 'var(--color-error)',
+      bgColor: 'bg-error/10',
+      subtitle: 'Across all customers'
+    }
+  ];
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
@@ -46,6 +78,8 @@ const SPCustomers = () => {
 
         const salespersonCode = localStorage.getItem('salespersonCode');
         const customersForSalesperson = localStorage.getItem('customersForSalesperson');
+        const ASOSalespersons = localStorage.getItem('ASOSalespersons');
+        const effectiveSalespersonCodes = ASOSalespersons?.trim() ? ASOSalespersons : salespersonCode;
 
         if (!salespersonCode) {
           console.error('Salesperson code not found');
@@ -57,6 +91,8 @@ const SPCustomers = () => {
           console.error('No customers available for this salesperson');
           setAllCustomers([]);
           setFilteredCustomers([]);
+          setTotalOutstanding(0);
+          setTotalOverdueAmount(0);
           return;
         }
 
@@ -67,7 +103,13 @@ const SPCustomers = () => {
           getCustomersByNoListExpanded(chunk.join('|'))
         );
 
-        const customerResults = await Promise.all(customerPromises);
+        const today = getTodayDate();
+
+        const [customerResults, overdueResult] = await Promise.all([
+          Promise.all(customerPromises),
+          getSPOverdueInvoiceAmount(effectiveSalespersonCodes, today)
+        ]);
+
         const failedCustomerResult = customerResults.find(r => !r?.success);
 
         if (!failedCustomerResult) {
@@ -101,6 +143,19 @@ const SPCustomers = () => {
               vpName: salesperson.salespersonsHierarchyVP?.[0]?.name || ''
             };
           });
+          const totalOutstandingValue = combinedCustomerData.reduce(
+            (sum, customer) => sum + (customer.balanceLCY || 0),
+            0
+          );
+
+          setTotalOutstanding(totalOutstandingValue);
+
+          if (overdueResult?.success) {
+            setTotalOverdueAmount(overdueResult.data?.amount || 0);
+          } else {
+            console.error('Failed to fetch overdue amount:', overdueResult?.error);
+            setTotalOverdueAmount(0);
+          }
 
           setAllCustomers(mapped);
           setFilteredCustomers(mapped);
@@ -108,11 +163,15 @@ const SPCustomers = () => {
           console.error('One or more customer batch calls failed:', failedCustomerResult?.error);
           setAllCustomers([]);
           setFilteredCustomers([]);
+          setTotalOutstanding(0);
+          setTotalOverdueAmount(0);
         }
       } catch (error) {
         console.error('Error fetching customers:', error);
         setAllCustomers([]);
         setFilteredCustomers([]);
+        setTotalOutstanding(0);
+        setTotalOverdueAmount(0);
       } finally {
         setLoading(false);
       }
@@ -165,8 +224,6 @@ const SPCustomers = () => {
     const headers = [
       'Code',
       'Name',
-      'Contact Name',
-      'E-mail ID',
       'City',
       'State',
       'Payment Term Code',
@@ -181,14 +238,14 @@ const SPCustomers = () => {
       'ZSM Name',
       'ASM Name',
       'ASO Name',
-      'VP Name'
+      'VP Name',
+      'Contact Name',
+      'E-mail ID'
     ];
 
     const rows = filteredCustomers.map(c => [
       c.code || '',
       c.name || '',
-      c.contactName || '',
-      c.email || '',
       c.city || '',
       c.state || '',
       c.paymentTermCode || '',
@@ -203,7 +260,9 @@ const SPCustomers = () => {
       c.zsmName || '',
       c.asmName || '',
       c.asoName || '',
-      c.vpName || ''
+      c.vpName || '',
+      c.contactName || '',
+      c.email || ''
     ]);
 
     const csvContent = [headers, ...rows]
@@ -273,6 +332,11 @@ const SPCustomers = () => {
                 </p>
               </div>
 
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+              {financialMetrics.map((metric, index) => (
+                <FinancialMetricCard key={index} {...metric} />
+              ))}
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:gap-8 mb-6 md:mb-8">
