@@ -129,7 +129,7 @@ const SPCustomers = () => {
               paymentTermCode: customer.paymentTermsCode || '',
               creditLimit: customer.creditLimitLCY || 0,
               outstanding: customer.balanceLCY || 0,
-              overdueAmount: 0,
+              overdueAmount: customer.overdueAmounts,
 
               salespersonCode: salesperson.code || '',
               salespersonName: salesperson.name || '',

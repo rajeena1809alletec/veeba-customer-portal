@@ -226,12 +226,18 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                 </td>
                 {/* ✅ ADD NEW COLUMN DATA */}
                 <td className="p-4 text-right">
-                  <span className={`font-body text-sm font-semibold data-text ${transaction?.remainingAmt > 0 ? 'text-error' : 'text-success'
+                  <span className={`font-body text-sm font-semibold data-text ${transaction?.remainingAmt < 0 ? 'text-error' : 'text-success'
                     }`}>
-                    {transaction?.remainingAmt !== null && transaction?.remainingAmt !== undefined
+                    {/* {transaction?.remainingAmt !== null && transaction?.remainingAmt !== undefined
                       ? `₹${Math.abs(transaction.remainingAmt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       : '-'
-                    }
+                    } */}
+                    {transaction?.remainingAmt !== null && transaction?.remainingAmt !== undefined
+                      ? `₹${transaction.remainingAmt.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}`
+                      : '-'}
                   </span>
                 </td>
                 <td className="p-4">
@@ -349,7 +355,11 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                 <span className="font-caption text-xs text-muted-foreground">Remaining</span>
                 <span className={`font-body text-sm font-semibold data-text ${transaction?.remainingAmt > 0 ? 'text-error' : 'text-success'
                   }`}>
-                  ₹{Math.abs(transaction.remainingAmt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {/* ₹{Math.abs(transaction.remainingAmt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} */}
+                  {transaction.remainingAmt.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
                 </span>
               </div>
             )}

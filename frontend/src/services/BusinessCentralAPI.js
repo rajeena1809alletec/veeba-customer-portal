@@ -1198,10 +1198,10 @@ export const getCustomersByNoListExpanded = async (customersForSalesperson, filt
 
         const queryParams = `$filter=${filterQuery}&$expand=salesperson($expand=salespersonsHierarchyNSM,salespersonsHierarchyRSM,salespersonsHierarchyZSM,salespersonsHierarchyASM,salespersonsHierarchyASO,salespersonsHierarchyVP)`;
 
-        console.log('getCustomersByNoListExpanded URL: ', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customer?${queryParams}`);
+        console.log('getCustomersByNoListExpanded URL: ', `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerexpandeddetails?${queryParams}`);
 
         const response = await axios.get(
-            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customer?${queryParams}`,
+            `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerexpandeddetails?${queryParams}`,
             {
                 headers: {
                     'Content-Type': 'application/json',

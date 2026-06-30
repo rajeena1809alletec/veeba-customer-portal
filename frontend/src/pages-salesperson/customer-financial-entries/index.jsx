@@ -233,7 +233,8 @@ const SPCustomerFinancialEntries = () => {
               date: entry.postingDate,
               reference: entry.documentNo,
               externalReference: entry.externalDocumentNo || '',
-              amount: Math.abs(entry.amountLCY || 0),
+              // amount: Math.abs(entry.amount || 0),
+              amount: entry.amount || 0,
               status,
               dueDate: entry.dueDate || '',
               paymentMode: type === 'payment' ? 'Bank Transfer' : null,
@@ -401,6 +402,7 @@ const SPCustomerFinancialEntries = () => {
       'Date',
       'Reference',
       'Customer No',
+      'Customer Name',
       'Amount',
       'Remaining Amount',
       'Status',
@@ -413,8 +415,12 @@ const SPCustomerFinancialEntries = () => {
       0
     );
 
+    // const totalRemainingAmount = filteredTransactions.reduce(
+    //   (sum, t) => sum + Math.abs(Number(t.remainingAmt || 0)),
+    //   0
+    // );
     const totalRemainingAmount = filteredTransactions.reduce(
-      (sum, t) => sum + Math.abs(Number(t.remainingAmtLCY || 0)),
+      (sum, t) => sum + Number(t.remainingAmt || 0),
       0
     );
     const rows = filteredTransactions.map(t => [
@@ -422,8 +428,10 @@ const SPCustomerFinancialEntries = () => {
       t.date || '',
       t.reference || '',
       t.customerNo || '',
+      t.customerName || '',
       t.amount?.toFixed(2) || '0.00',
-      t.remainingAmtLCY !== undefined ? Math.abs(t.remainingAmtLCY).toFixed(2) : '0.00',
+      // t.remainingAmt !== undefined ? Math.abs(t.remainingAmt).toFixed(2) : '0.00',
+      t.remainingAmt !== undefined ? Number(t.remainingAmt).toFixed(2) : '0.00',
       t.status || '',
       t.dueDate || '',
       t.salespersonCode || '',
@@ -431,6 +439,7 @@ const SPCustomerFinancialEntries = () => {
     ]);
     const totalRow = [
       'TOTAL',
+      '',
       '',
       '',
       '',
