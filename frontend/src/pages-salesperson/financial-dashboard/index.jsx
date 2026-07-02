@@ -91,6 +91,12 @@ const SPFinancialDashboard = () => {
 
   const [creditUtilization, setCreditUtilization] = useState('0%');
   const [assignmentError, setAssignmentError] = useState('');
+  const [agingData, setAgingData] = useState([
+    { period: '0-30 Days', amount: 0 },
+    { period: '31-60 Days', amount: 0 },
+    { period: '61-90 Days', amount: 0 },
+    { period: '90+ Days', amount: 0 }
+  ]);
 
 
   const financialMetrics = [
@@ -141,12 +147,12 @@ const SPFinancialDashboard = () => {
   ];
 
   const mockTransactions = [];
-  const agingData = [
-    { period: '0-30 Days', amount: 456780.50 },
-    { period: '31-60 Days', amount: 345670.00 },
-    { period: '61-90 Days', amount: 234560.00 },
-    { period: '90+ Days', amount: 208670.00 }
-  ];
+  // const agingData = [
+  //   { period: '0-30 Days', amount: 456780.50 },
+  //   { period: '31-60 Days', amount: 345670.00 },
+  //   { period: '61-90 Days', amount: 234560.00 },
+  //   { period: '90+ Days', amount: 208670.00 }
+  // ];
 
   const paymentAlerts = [
     {
@@ -365,6 +371,12 @@ const SPFinancialDashboard = () => {
             }
             // const customer = entry.customer?.[0] || {};
             const salesperson = entry.customer?.[0].salesperson?.[0] || {};
+            const vp = salesperson.salespersonsHierarchyVP?.[0] || {};
+            const nsm = salesperson.salespersonsHierarchyNSM?.[0] || {};
+            const rsm = salesperson.salespersonsHierarchyRSM?.[0] || {};
+            const zsm = salesperson.salespersonsHierarchyZSM?.[0] || {};
+            const asm = salesperson.salespersonsHierarchyASM?.[0] || {};
+            const aso = salesperson.salespersonsHierarchyASO?.[0] || {};
 
             return {
               id: entry.ledgerEntryNo,
@@ -380,10 +392,74 @@ const SPFinancialDashboard = () => {
               remainingAmt: entry.remainingAmount,
               remainingAmtLCY: entry.remainingAmtLCY,
               customerNo: entry.customerNo,
+              customerName: entry.customer?.[0].name || '',
               salespersonCode: salesperson.code || '',
               salespersonName: salesperson.name || '',
+              salespersonLevel: salesperson.level || '',
+
+              vpCode: vp.code || salesperson.vpCode || '',
+              vpName: vp.name || '',
+
+              nsmCode: nsm.code || salesperson.nsmCode || '',
+              nsmName: nsm.name || '',
+
+              rsmCode: rsm.code || salesperson.rsmCode || '',
+              rsmName: rsm.name || '',
+
+              zsmCode: zsm.code || salesperson.zsmCode || '',
+              zsmName: zsm.name || '',
+
+              asmCode: asm.code || salesperson.asmCode || '',
+              asmName: asm.name || '',
+
+              asoCode: aso.code || salesperson.asoCode || '',
+              asoName: aso.name || ''
             };
           });
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const agingBuckets = {
+            '0-30 Days': 0,
+            '31-60 Days': 0,
+            '61-90 Days': 0,
+            '90+ Days': 0
+          };
+
+          combinedLedgerEntries.forEach((entry) => {
+            const documentType = entry.documentType?.replace(/_x0020_/g, ' ') || '';
+
+            if (documentType !== 'Invoice') return;
+            if (!entry.dueDate) return;
+
+            const dueDate = new Date(entry.dueDate);
+            dueDate.setHours(0, 0, 0, 0);
+
+            const diffTime = today.getTime() - dueDate.getTime();
+            const overdueDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (overdueDays <= 0) return;
+
+            // const amount = Math.abs(Number(entry.remainingAmtLCY ?? entry.remainingAmount ?? entry.amountLCY ?? 0));
+            const amount = Math.abs(Number(entry.remainingAmount ?? entry.remainingAmtLCY ?? entry.amount ?? 0));
+
+            if (overdueDays <= 30) {
+              agingBuckets['0-30 Days'] += amount;
+            } else if (overdueDays <= 60) {
+              agingBuckets['31-60 Days'] += amount;
+            } else if (overdueDays <= 90) {
+              agingBuckets['61-90 Days'] += amount;
+            } else {
+              agingBuckets['90+ Days'] += amount;
+            }
+          });
+
+          setAgingData([
+            { period: '0-30 Days', amount: agingBuckets['0-30 Days'] },
+            { period: '31-60 Days', amount: agingBuckets['31-60 Days'] },
+            { period: '61-90 Days', amount: agingBuckets['61-90 Days'] },
+            { period: '90+ Days', amount: agingBuckets['90+ Days'] }
+          ]);
 
           setAllTransactions(mappedTransactions);
           setFilteredTransactions(mappedTransactions);
@@ -409,13 +485,23 @@ const SPFinancialDashboard = () => {
     let filtered = [...allTransactions];
 
     if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+
       filtered = filtered.filter(t =>
         t?.reference?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.amount?.toString()?.includes(searchTerm) ||
         t?.externalReference?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.customerNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.salespersonCode?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.salespersonName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+        t?.customerName?.toLowerCase()?.includes(searchLower) ||
+        t?.salespersonCode?.toLowerCase()?.includes(searchLower) ||
+        t?.salespersonName?.toLowerCase()?.includes(searchLower) ||
+        t?.salespersonLevel?.toLowerCase()?.includes(searchLower) ||
+        t?.vpName?.toLowerCase()?.includes(searchLower) ||
+        t?.nsmName?.toLowerCase()?.includes(searchLower) ||
+        t?.rsmName?.toLowerCase()?.includes(searchLower) ||
+        t?.zsmName?.toLowerCase()?.includes(searchLower) ||
+        t?.asmName?.toLowerCase()?.includes(searchLower) ||
+        t?.asoName?.toLowerCase()?.includes(searchLower)
       );
     }
 
@@ -539,26 +625,42 @@ const SPFinancialDashboard = () => {
     const headers = [
       'Type',
       'Date',
+      'Due Date',
       'Reference',
       'Customer No',
-      'Salesperson Code',
-      'Salesperson Name',
+      'Customer Name',
       'Amount',
       'Remaining Amount',
       'Status',
-      'Due Date'
+      'Salesperson Code',
+      'Salesperson Name',
+      'Salesperson Level',
+      'NSM Name',
+      'RSM Name',
+      'ZSM Name',
+      'ASM Name',
+      'ASO Name',
+      'VP Name'
     ];
     const rows = filteredTransactions.map(t => [
       t.type || '',
       t.date || '',
+      t.dueDate || '',
       t.reference || '',
       t.customerNo || '',
-      t.salespersonCode || '',
-      t.salespersonName || '',
+      t.customerName || '',
       t.amount?.toFixed(2) || '0.00',
       t.remainingAmtLCY !== undefined ? Math.abs(t.remainingAmtLCY).toFixed(2) : '0.00',
       t.status || '',
-      t.dueDate || ''
+      t.salespersonCode || '',
+      t.salespersonName || '',
+      t.salespersonLevel || '',
+      t.nsmName || '',
+      t.rsmName || '',
+      t.zsmName || '',
+      t.asmName || '',
+      t.asoName || '',
+      t.vpName || ''
     ]);
 
     const csvContent = [headers, ...rows]

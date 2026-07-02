@@ -158,6 +158,27 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
               <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
                 Salesperson Name
               </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                Salesperson Level
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                VP Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                NSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                RSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                ZSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                ASM Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                ASO Name
+              </th>
               {/* <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
                 Status
               </th> */}
@@ -250,6 +271,27 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                   <span className="font-caption text-sm text-foreground data-text">
                     {transaction?.salespersonName || '—'}
                   </span>
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.salespersonLevel || '—'}
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.vpName || '—'}
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.nsmName || '—'}
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.rsmName || '—'}
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.zsmName || '—'}
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.asmName || '—'}
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.asoName || '—'}
                 </td>
                 {/* <td className="p-4">
                   <div className="flex justify-center">

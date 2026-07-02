@@ -79,86 +79,106 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
       {/* Desktop Table View */}
       <div className="hidden lg:block overflow-x-auto scrollbar-custom">
         <table className="w-full">
-          <thead className="bg-muted/50 border-b border-border">
+          <thead className="bg-muted/30 border-b border-border">
             <tr>
-              <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
                 Type
               </th>
+
               <th
-                className="text-left p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
+                className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground cursor-pointer hover:bg-muted/50 transition-smooth whitespace-nowrap"
                 onClick={() => handleSort('date')}
               >
                 <div className="flex items-center gap-2">
                   Date
-                  <Icon
-                    name={sortConfig?.key === 'date' && sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown'}
-                    size={16}
-                  />
+                  <Icon name="ArrowUpDown" size={14} />
                 </div>
               </th>
-              <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                Due Date
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
                 Reference
               </th>
+
               <th
-                className="text-left p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
+                className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground cursor-pointer hover:bg-muted/50 transition-smooth whitespace-nowrap"
                 onClick={() => handleSort('customerNo')}
               >
                 <div className="flex items-center gap-2">
                   Customer No
-                  <Icon
-                    name={sortConfig?.key === 'customerNo' ? sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown' : 'ChevronsUpDown'} size={16} />
+                  <Icon name="ArrowUpDown" size={14} />
                 </div>
               </th>
-              <th
-                className="text-left p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
-                onClick={() => handleSort('salespersonCode')}
-              >
-                <div className="flex items-center gap-2">
-                  Salesperson Code
-                  <Icon
-                    name={sortConfig?.key === 'salespersonCode' ? sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown' : 'ChevronsUpDown'} size={16} />
-                  {/* <Icon
-                    name={sortConfig?.key === 'salespersonCode' && sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown'}
-                    size={16}
-                  /> */}
-                </div>
+
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                Customer Name
               </th>
-              <th className="text-left p-4 font-heading font-semibold text-sm text-foreground">
-                Salesperson Name
-              </th>
+
               <th
-                className="text-right p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
+                className="px-4 py-3 text-right font-heading font-medium text-sm text-foreground cursor-pointer hover:bg-muted/50 transition-smooth whitespace-nowrap"
                 onClick={() => handleSort('amount')}
               >
                 <div className="flex items-center justify-end gap-2">
                   Amount
-                  <Icon
-                    name={sortConfig?.key === 'amount' && sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown'}
-                    size={16}
-                  />
+                  <Icon name="ArrowUpDown" size={14} />
                 </div>
               </th>
-              {/* ✅ ADD NEW COLUMN HEADER */}
+
               <th
-                className="text-right p-4 font-heading font-semibold text-sm text-foreground cursor-pointer hover:bg-muted/70 transition-smooth"
+                className="px-4 py-3 text-right font-heading font-medium text-sm text-foreground cursor-pointer hover:bg-muted/50 transition-smooth whitespace-nowrap"
                 onClick={() => handleSort('remainingAmt')}
               >
                 <div className="flex items-center justify-end gap-2">
                   Remaining Amount
-                  <Icon
-                    name={sortConfig?.key === 'remainingAmt' && sortConfig?.direction === 'asc' ? 'ArrowUp' : 'ArrowDown'}
-                    size={16}
-                  />
+                  <Icon name="ArrowUpDown" size={14} />
                 </div>
               </th>
-              <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
+
+              <th className="px-4 py-3 text-center font-heading font-medium text-sm text-foreground whitespace-nowrap">
                 Status
               </th>
-              {/* <th className="text-center p-4 font-heading font-semibold text-sm text-foreground">
+
+              <th
+                className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground cursor-pointer hover:bg-muted/50 transition-smooth whitespace-nowrap"
+                onClick={() => handleSort('salespersonCode')}
+              >
+                <div className="flex items-center gap-2">
+                  Salesperson Code
+                  <Icon name="ArrowUpDown" size={14} />
+                </div>
+              </th>
+
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                Salesperson Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                Salesperson Level
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                NSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                RSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                ZSM Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                ASM Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                ASO Name
+              </th>
+              <th className="px-4 py-3 text-left font-heading font-medium text-sm text-foreground whitespace-nowrap">
+                VP Name
+              </th>
+              {/* <th className="px-4 py-3 text-center font-heading font-medium text-sm text-foreground whitespace-nowrap">
                 Actions
               </th> */}
             </tr>
           </thead>
+
           <tbody>
             {sortedTransactions?.map((transaction) => (
               <tr
@@ -175,58 +195,99 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                     </span>
                   </div>
                 </td>
-                <td className="p-4">
-                  <span className="font-body text-sm text-foreground">
-                    {new Date(transaction.date)?.toLocaleDateString('en-IN', {
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {new Date(transaction.date)?.toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.dueDate
+                    ? new Date(transaction.dueDate).toLocaleDateString('en-IN', {
                       day: '2-digit',
                       month: 'short',
                       year: 'numeric'
-                    })}
+                    })
+                    : '—'}
+                </td>
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.reference || '—'}
+                </td>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.customerNo || '—'}
+                </td>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.customerName || '—'}
+                </td>
+
+                <td className="px-4 py-4 text-sm text-right text-foreground whitespace-nowrap">
+                  ₹{transaction?.amount?.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                </td>
+
+                <td className={`px-4 py-4 text-sm text-right whitespace-nowrap ${(transaction?.remainingAmt || 0) > 0 ? 'text-error' : 'text-success'
+                  }`}>
+                  {transaction?.remainingAmt !== null && transaction?.remainingAmt !== undefined
+                    ? `₹${Math.abs(transaction.remainingAmt).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}`
+                    : '-'}
+                </td>
+
+                <td className="px-4 py-4 text-center">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction?.status)}`}>
+                    {transaction?.status}
                   </span>
                 </td>
-                <td className="p-4">
-                  <span className="font-caption text-sm text-foreground data-text">
-                    {transaction?.reference}
-                  </span>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.salespersonCode || '—'}
                 </td>
-                {/* After Reference td */}
-                <td className="p-4">
-                  <span className="font-caption text-sm text-foreground data-text">
-                    {transaction?.customerNo || '—'}
-                  </span>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.salespersonName || '—'}
                 </td>
-                <td className="p-4">
-                  <span className="font-caption text-sm text-foreground data-text">
-                    {transaction?.salespersonCode || '—'}
-                  </span>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.salespersonLevel || '—'}
                 </td>
-                <td className="p-4">
-                  <span className="font-caption text-sm text-foreground data-text">
-                    {transaction?.salespersonName || '—'}
-                  </span>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.nsmName || '—'}
                 </td>
-                <td className="p-4 text-right">
-                  <span className="font-body text-sm font-semibold text-foreground data-text">
-                    ₹{transaction?.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.rsmName || '—'}
                 </td>
-                {/* ✅ ADD NEW COLUMN DATA */}
-                <td className="p-4 text-right">
-                  <span className={`font-body text-sm font-semibold data-text ${transaction?.remainingAmt > 0 ? 'text-error' : 'text-success'
-                    }`}>
-                    {transaction?.remainingAmt !== null && transaction?.remainingAmt !== undefined
-                      ? `₹${Math.abs(transaction.remainingAmt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                      : '-'
-                    }
-                  </span>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.zsmName || '—'}
                 </td>
-                <td className="p-4">
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.asmName || '—'}
+                </td>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.asoName || '—'}
+                </td>
+
+                <td className="px-4 py-4 text-sm text-foreground whitespace-nowrap">
+                  {transaction?.vpName || '—'}
+                </td>
+                {/* <td className="p-4">
                   <div className="flex justify-center">
                     <span className={`px-3 py-1 rounded-full font-caption text-xs font-medium capitalize ${getStatusColor(transaction?.status)}`}>
                       {transaction?.status}
                     </span>
                   </div>
-                </td>
+                </td> */}
                 {/* <td className="p-4">
                   <div className="flex items-center justify-center gap-2">
                     <button
@@ -287,13 +348,28 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                 ₹{transaction?.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-caption text-xs text-muted-foreground">Due Date</span>
+              <span className="font-body text-sm text-foreground data-text">
+                {transaction?.dueDate
+                  ? new Date(transaction.dueDate).toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  })
+                  : '—'}
+              </span>
+            </div>
             <div className="flex items-center justify-between mb-2">
               <span className="font-caption text-xs text-muted-foreground">Customer No</span>
               <span className="font-body text-sm text-foreground data-text">
                 {transaction?.customerNo || '—'}
               </span>
             </div>
-
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Customer Name</p>
+              <p className="text-sm text-foreground">{transaction?.customerName || '-'}</p>
+            </div>
             <div className="flex items-center justify-between mb-3">
               <span className="font-caption text-xs text-muted-foreground">Salesperson Code</span>
               <span className="font-body text-sm text-foreground data-text">
@@ -317,7 +393,7 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
               </div>
             )}
 
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -338,7 +414,7 @@ const TransactionsTable = ({ transactions, onDownloadPDF, onViewDetails }) => {
                   PDF
                 </Button>
               )}
-            </div>
+            </div> */}
           </div>
         ))}
       </div>

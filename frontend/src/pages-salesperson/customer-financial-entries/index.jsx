@@ -227,6 +227,13 @@ const SPCustomerFinancialEntries = () => {
             const customer = entry.customer?.[0] || {};
             const salesperson = customer.salesperson?.[0] || {};
 
+            const vp = salesperson.salespersonsHierarchyVP?.[0] || {};
+            const nsm = salesperson.salespersonsHierarchyNSM?.[0] || {};
+            const rsm = salesperson.salespersonsHierarchyRSM?.[0] || {};
+            const zsm = salesperson.salespersonsHierarchyZSM?.[0] || {};
+            const asm = salesperson.salespersonsHierarchyASM?.[0] || {};
+            const aso = salesperson.salespersonsHierarchyASO?.[0] || {};
+
             return {
               id: entry.ledgerEntryNo,
               type: documentType,
@@ -245,6 +252,26 @@ const SPCustomerFinancialEntries = () => {
               customerName: customer.name,
               salespersonCode: salesperson.code || '',
               salespersonName: salesperson.name || '',
+              salespersonLevel: salesperson.level || '',
+              vpCode: vp.code || salesperson.vpCode || '',
+              vpName: vp.name || '',
+
+              nsmCode: nsm.code || salesperson.nsmCode || '',
+              nsmName: nsm.name || '',
+
+              rsmCode: rsm.code || salesperson.rsmCode || '',
+              rsmName: rsm.name || '',
+
+              zsmCode: zsm.code || salesperson.zsmCode || '',
+              zsmName: zsm.name || '',
+
+              asmCode: asm.code || salesperson.asmCode || '',
+              asmName: asm.name || '',
+
+              asoCode: aso.code || salesperson.asoCode || '',
+              asoName: aso.name || '',
+              externalDocumentNo: entry.externalDocumentNo || '',
+              postedNarration: entry.postedNarrations?.[0]?.narration || '',
             };
           });
 
@@ -276,7 +303,14 @@ const SPCustomerFinancialEntries = () => {
         t?.externalReference?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.customerNo?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
         t?.salespersonCode?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-        t?.salespersonName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+        t?.salespersonName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.salespersonLevel?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.vpName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.nsmName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.rsmName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.zsmName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.asmName?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        t?.asoName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
       );
     }
 
@@ -408,7 +442,16 @@ const SPCustomerFinancialEntries = () => {
       'Status',
       'Due Date',
       'Salesperson Code',
-      'Salesperson Name'
+      'Salesperson Name',
+      'Salesperson Level',
+      'VP Name',
+      'NSM Name',
+      'RSM Name',
+      'ZSM Name',
+      'ASM Name',
+      'ASO Name',
+      'External Document No',
+      'Posted Narration'
     ];
     const totalAmount = filteredTransactions.reduce(
       (sum, t) => sum + Number(t.amount || 0),
@@ -430,12 +473,20 @@ const SPCustomerFinancialEntries = () => {
       t.customerNo || '',
       t.customerName || '',
       t.amount?.toFixed(2) || '0.00',
-      // t.remainingAmt !== undefined ? Math.abs(t.remainingAmt).toFixed(2) : '0.00',
       t.remainingAmt !== undefined ? Number(t.remainingAmt).toFixed(2) : '0.00',
       t.status || '',
       t.dueDate || '',
       t.salespersonCode || '',
       t.salespersonName || '',
+      t.salespersonLevel || '',
+      t.vpName || '',
+      t.nsmName || '',
+      t.rsmName || '',
+      t.zsmName || '',
+      t.asmName || '',
+      t.asoName || '',
+      t.externalDocumentNo || '',
+      t.postedNarration || ''
     ]);
     const totalRow = [
       'TOTAL',
@@ -445,6 +496,15 @@ const SPCustomerFinancialEntries = () => {
       '',
       totalAmount.toFixed(2),
       totalRemainingAmount.toFixed(2),
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
       '',
       '',
       '',

@@ -54,6 +54,11 @@ const getCurrentFYRange = () => {
     endDate: fmt(new Date(fyStartYear + 1, 2, 31))     // 31st March
   };
 };
+const formatINR = (amount) =>
+  `₹${Number(amount || 0).toLocaleString('en-IN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  })}`;
 
 const SPDashboard = () => {
   const navigate = useNavigate();
@@ -157,11 +162,13 @@ const SPDashboard = () => {
           console.error('Failed to fetch one or more customer batches:', failedCustomerResult?.error);
         }
 
-        const outstandingBalance = `₹${totalBalanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // const outstandingBalance = `₹${totalBalanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const outstandingBalance = formatINR(totalBalanceLCY);
         const utilizationPercentage = totalCreditLimitLCY > 0 ? (totalBalanceLCY / totalCreditLimitLCY) * 100 : 0;
-        const creditUtilization = `${utilizationPercentage.toFixed(1)}%`;
-        const creditUtilizationSubtitle = `₹${totalBalanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of ₹${totalCreditLimitLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
+        // const creditUtilization = `${utilizationPercentage.toFixed(1)}%`;
+        const creditUtilization = `${Math.round(utilizationPercentage)}%`;
+        // const creditUtilizationSubtitle = `₹${totalBalanceLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of ₹${totalCreditLimitLCY.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const creditUtilizationSubtitle = `${formatINR(totalBalanceLCY)} of ${formatINR(totalCreditLimitLCY)}`;
 
 
         // let invoiceAmountCM = '₹0';
@@ -208,27 +215,31 @@ const SPDashboard = () => {
 
         if (paymentCMResult.success) {
           const amt = paymentCMResult.data.amount || 0;
-          paymentAmountCM = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          // paymentAmountCM = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          paymentAmountCM = formatINR(Math.abs(amt));
         } else {
           console.error('Failed to fetch payment value CM:', paymentCMResult.error);
         }
 
         if (paymentFYResult.success) {
           const amt = paymentFYResult.data.amount || 0;
-          paymentAmountFY = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          // paymentAmountFY = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          paymentAmountFY = formatINR(Math.abs(amt));
         } else {
           console.error('Failed to fetch payment value FY:', paymentFYResult.error);
         }
         if (openOrderResult.success) {
           const amt = openOrderResult.data.amount || 0;
-          openOrderValue = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          // openOrderValue = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          openOrderValue = formatINR(Math.abs(amt));
         } else {
           console.error('Failed to fetch open order value:', openOrderResult.error);
         }
 
         if (blockedOrderResult.success) {
           const amt = blockedOrderResult.data.amount || 0;
-          blockedOrderValue = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          // blockedOrderValue = `₹${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          blockedOrderValue = formatINR(Math.abs(amt));
         } else {
           console.error('Failed to fetch blocked order value:', blockedOrderResult.error);
         }

@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// const BACKEND_URL = "http://localhost:5000";
-const BACKEND_URL = "https://veeba-customer-portal-backend.onrender.com"
+const BACKEND_URL = "http://localhost:5000";
+// const BACKEND_URL = "https://veeba-customer-portal-backend.onrender.com"
 const BASE_API_URL = "/api";
 
 // const COMPANY_ID = '2d90f615-1d92-f011-b41a-6045bde7bf1a';    //Alletec
@@ -1238,7 +1238,7 @@ export const getCustomerLedgerEntriesByCustomerNo = async (customerNo, filters =
 
         let queryParams = `$filter=${filterQuery}`;
 
-        queryParams += '&$expand=customer($expand=salesperson($expand=salespersonsHierarchyNSM,salespersonsHierarchyRSM,salespersonsHierarchyZSM,salespersonsHierarchyASM,salespersonsHierarchyASO,salespersonsHierarchyVP))';
+        queryParams += '&$expand=customer($expand=salesperson($expand=salespersonsHierarchyNSM,salespersonsHierarchyRSM,salespersonsHierarchyZSM,salespersonsHierarchyASM,salespersonsHierarchyASO,salespersonsHierarchyVP)), postedNarrations';
 
         const url = `${BACKEND_URL}${BASE_API_URL}/alletec/app/v2.0/companies(${COMPANY_ID})/customerLedgerEntries?${queryParams}`;
 
